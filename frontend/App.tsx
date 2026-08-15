@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { JournalForm } from "./components/JournalForm";
 import { ResultView } from "./components/ResultView";
 import { CrisisView } from "./components/CrisisView";
 import { CheckInCount } from "./components/CheckInCount";
 import { PixelSkyline } from "./components/PixelSkyline";
-import { Hixy } from "./components/Hixy";
+import { Eixy } from "./components/Eixy";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -51,13 +51,11 @@ async function fetchCheckinCount(): Promise<number> {
   }
 }
 
-function getHixyState(
+function getEixyState(
   result: AnalyzeResult | null
 ): "intro" | "positive" | "elevated" | null {
   if (!result || result.crisis) return null;
   const normalResult = result as NormalResult;
-  // PENDING: Backend needs to add `severity: "low" | "elevated"` to /api/analyze response.
-  // Until then, all non-crisis results default to "positive" state.
   return normalResult.severity === "elevated" ? "elevated" : "positive";
 }
 
@@ -66,14 +64,31 @@ export function App() {
   const [result, setResult] = useState<AnalyzeResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showHixy, setShowHixy] = useState(true);
+  const [showEixy, setShowEixy] = useState(true);
+  const [text, setText] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     fetchCheckinCount().then(setCount);
   }, []);
 
-  async function handleSubmit(text: string) {
-    setShowHixy(false);
+  function handleClear() {
+    setText("");
+  }
+
+  function handleNewCheckIn() {
+    setResult(null);
+    setError(null);
+    setShowEixy(true);
+    handleClear();
+    requestAnimationFrame(() => {
+      textareaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      textareaRef.current?.focus();
+    });
+  }
+
+  async function handleSubmit(submittedText: string) {
+    setShowEixy(false);
     setIsSubmitting(true);
     setError(null);
     try {
@@ -83,7 +98,7 @@ export function App() {
           "Content-Type": "application/json",
           "X-Device-Id": getDeviceId(),
         },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text: submittedText }),
       });
       const data = await res.json();
 
@@ -112,10 +127,13 @@ export function App() {
         className="flex items-center justify-between px-6 py-4"
         style={{ backgroundColor: "var(--accent-pink)" }}
       >
-        <span className="font-pixel text-[11px] text-white">SIFT</span>
+        <div className="flex items-center gap-3">
+          <span className="font-pixel text-[12px] text-white">SIFT</span>
+          <CheckInCount count={count} />
+        </div>
         <a
           href="#crisis-resources"
-          className="font-pixel text-[9px] text-white underline decoration-2 underline-offset-4"
+          className="font-pixel inline-block py-3 px-2 text-[12px] text-white underline decoration-2 underline-offset-4 hover:text-[color:var(--accent-yellow)]"
         >
           CRISIS RESOURCES ↓
         </a>
@@ -123,7 +141,7 @@ export function App() {
 
       <main className="mx-auto flex w-full max-w-2xl flex-col items-center gap-8 px-6 py-16">
         <header className="flex flex-col items-center gap-4 text-center">
-          <Hixy state="intro" isVisible={showHixy} />
+          <Eixy state="intro" isVisible={showEixy} />
           <h1 className="font-pixel text-3xl text-[color:var(--paper)] sm:text-4xl">
             SIFT
           </h1>
@@ -133,24 +151,39 @@ export function App() {
           </p>
         </header>
 
-        <JournalForm onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+        <JournalForm
+          ref={textareaRef}
+          value={text}
+          onChange={setText}
+          onSubmit={handleSubmit}
+          isSubmitting={isSubmitting}
+        />
 
         {error && (
           <p
             role="alert"
-            className="font-pixel text-[10px] leading-relaxed text-[color:var(--accent-crisis)]"
+            className="font-pixel text-[12px] leading-relaxed text-[color:var(--accent-crisis)]"
           >
-            {error.toUpperCase()}
+            {error}
           </p>
         )}
 
         {result && !result.crisis && <ResultView result={result} />}
         {result && !result.crisis && (
-          <Hixy state={getHixyState(result) || "positive"} isVisible={true} />
+          <Eixy state={getEixyState(result) || "positive"} isVisible={true} />
         )}
         {result && result.crisis && <CrisisView result={result} />}
 
-        <CheckInCount count={count} />
+        {result && (
+          <button
+            type="button"
+            onClick={handleNewCheckIn}
+            className="pixel-border-pink font-pixel px-6 py-3 text-[11px] text-white transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+            style={{ backgroundColor: "var(--accent-pink)" }}
+          >
+            ▶ NEW CHECK-IN
+          </button>
+        )}
 
         <div className="mt-auto w-full pt-8">
           <PixelSkyline />

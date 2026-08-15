@@ -1,0 +1,9 @@
+{
+    "kilo-code.new.showTokenThroughput": true,
+    "kilo-code.new.attention.enabled": true,
+    "kilo-code.new.browserAutomation.enabled": true,
+    "kilo-code.new.browserAutomation.headless": true,
+    "kilo-code.new.claudeCodeCompat": true,
+    "kilo-code.new.diff.renderMarkdown": true,
+    "kilo-code.new.fontSize": 14
+}

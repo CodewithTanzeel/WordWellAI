@@ -19,7 +19,7 @@
   --accent-green-dark: #1fa85c;
   --accent-yellow: #ffd23f;
 
-  --muted: #8b8b96;
+  --muted: #6a6a7c;
   --border: #0f0f14;
 
   /* Crisis screen — deliberately NOT part of the game palette */
@@ -85,6 +85,17 @@ body {
   from {
     opacity: 0;
     transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInSlow {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
   }
   to {
     opacity: 1;

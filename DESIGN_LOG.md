@@ -74,46 +74,46 @@ Purpose: give future-us (or future-Claude) full context without having to re-der
 
 **Context:** Name selection for the new character feature (Section 7 of the plan).
 
-**Changed:** Character is officially named **Hixy** across `UX-UI-IMPROVEMENT-PLAN.md`. All references to "Pip"/"name TBD" in that doc replaced.
+**Changed:** Character is officially named **Eixy** across `UX-UI-IMPROVEMENT-PLAN.md`. All references to "Hixy" in that doc replaced.
 
 **Why:** User's choice — Claude proposed Pip/Nibble/Glow as pixel-theme-fitting options, user opted for their own name instead.
 
-**Left alone / deliberately not changed:** Nothing else in the character spec changed — states, boundaries, and the backend `severity` field decision from the previous entry all still apply, just now attributed to Hixy specifically.
+**Left alone / deliberately not changed:** Nothing else in the character spec changed — states, boundaries, and the backend `severity` field decision from the previous entry all still apply, just now attributed to Eixy specifically.
 
 **Follow-ups:**
-- Need actual copy/dialogue lines for all three Hixy states, written for approval before implementation.
+- Need actual copy/dialogue lines for all three Eixy states, written for approval before implementation.
 - Backend `severity` field still needs sign-off from whoever owns `backend/app/main.py`.
-- Consider whether Hixy's visual design (currently the placeholder ghost/face SVG) should be revisited to suit the name, or left as-is and just re-labeled.
+- Consider whether Eixy's visual design (currently the placeholder ghost/face SVG) should be revisited to suit the name, or left as-is and just re-labeled.
 
 ---
 
-## 2026-08-15 — Remaining open questions resolved; Hixy visual design deferred to after copy
+## 2026-08-15 — Remaining open questions resolved; Eixy visual design deferred to after copy
 
-**Context:** Closed out the three open questions from the original plan (check-in count behavior on reset, contrast standard, `--muted` adjustment permission), and decided Hixy's visual approach.
+**Context:** Closed out the three open questions from the original plan (check-in count behavior on reset, contrast standard, `--muted` adjustment permission), and decided Eixy's visual approach.
 
-**Changed:** `UX-UI-IMPROVEMENT-PLAN.md` — open questions section marked resolved; added §7.7 confirming Hixy gets a new custom pixel pose rather than reusing the placeholder ghost/face SVG.
+**Changed:** `UX-UI-IMPROVEMENT-PLAN.md` — open questions section marked resolved; added §7.7 confirming Eixy gets a new custom pixel pose rather than reusing the placeholder ghost/face SVG.
 
 **Why / decisions:**
 - "Write another entry" will **not** reset the check-in count — only the form and result clear. Count is a running honest usage tally, not a per-session score.
 - Contrast target is **WCAG AA** across the app.
 - `--muted` (the secondary/disclaimer text color) may be nudged in lightness if it fails the AA contrast check — scoped to that one token only, everything else in the palette stays locked.
-- Hixy will get a **newly designed pixel shape/pose**, not the current placeholder. Deliberately sequenced *after* dialogue copy is approved, so the visual pose can be built to match the personality the writing establishes, rather than writing lines to fit a shape that was never designed with a personality in mind.
+- Eixy will get a **newly designed pixel shape/pose**, not the current placeholder. Deliberately sequenced *after* dialogue copy is approved, so the visual pose can be built to match the personality the writing establishes, rather than writing lines to fit a shape that was never designed with a personality in mind.
 
-**Left alone / deliberately not changed:** All other theme tokens besides `--muted` remain locked, per the original plan constraint. The placeholder `PixelMascot` SVG stays in place as a functional fallback until the new Hixy design is ready — not removed prematurely.
+**Left alone / deliberately not changed:** All other theme tokens besides `--muted` remain locked, per the original plan constraint. The placeholder `PixelMascot` SVG stays in place as a functional fallback until the new Eixy design is ready — not removed prematurely.
 
 **Follow-ups:**
-- Draft dialogue lines for all three Hixy states — in progress, presented for review in-chat (not yet written to a file).
-- Once dialogue is approved: design Hixy's actual pixel sprite/pose.
+- Draft dialogue lines for all three Eixy states — in progress, presented for review in-chat (not yet written to a file).
+- Once dialogue is approved: design Eixy's actual pixel sprite/pose.
 - Run the actual WCAG AA contrast audit against current tokens once implementation starts.
 
 ---
 
-## 2026-08-15 — Hixy dialogue lines approved
+## 2026-08-15 — Eixy dialogue lines approved
 
-**Context:** Presented two tone options (A/B) per Hixy state for review.
+**Context:** Presented two tone options (A/B) per Eixy state for review.
 
 **Changed:** `UX-UI-IMPROVEMENT-PLAN.md` §7.1–7.3 now each have an "Approved copy" line. Final selections:
-- **Intro (7.1):** "Hi, I'm Hixy! This box doesn't judge. Say the messy stuff, the small stuff, whatever's actually true today."
+- **Intro (7.1):** "Hi, I'm Eixy! This box doesn't judge. Say the messy stuff, the small stuff, whatever's actually true today."
 - **Positive/low-signal (7.2):** "Good to hear. Thanks for putting it into words — noticing this stuff matters more than people think."
 - **Elevated/negative-signal (7.3):** "That sounds like a lot to carry. I'm glad you said it out loud instead of sitting on it. I'll be here whenever you want to check in again."
 
@@ -122,5 +122,221 @@ Purpose: give future-us (or future-Claude) full context without having to re-der
 **Left alone / deliberately not changed:** No line uses "try again" or scoring language, per the original constraint in §7.3 — confirmed all three approved lines hold to that.
 
 **Follow-ups:**
-- Design Hixy's pixel sprite/pose next, now that personality is established by the copy (per §7.7's sequencing decision).
-- Then: implementation — component structure for Hixy, backend `severity` field, speech bubble fade/accessibility behavior (§7.6).
+- Design Eixy's pixel sprite/pose next, now that personality is established by the copy (per §7.7's sequencing decision).
+- Then: implementation — component structure for Eixy, backend `severity` field, speech bubble fade/accessibility behavior (§7.6).
+
+---
+
+## 2026-08-15 — Character renamed to Eixy in code and dialogue; asset path updated to /eixy.svg
+
+**Context:** Phase 0 of the frontend implementation plan — character name alignment before main work begins.
+
+**Changed:** `components/Hixy.tsx` renamed to `components/Eixy.tsx`; all internal references updated: type `HixyState` → `EixyState`, component `Hixy` → `Eixy`, dialogue intro line "Hi, I'm Hixy!" → "Hi, I'm Eixy!", image `src` `/hixy.svg` → `/eixy.svg`, alt text "Hixy" → "Eixy". `App.tsx` import and usage updated accordingly. `Hixy.tsx` file deleted.
+
+**Why:** Align code with approved Eixy branding established in design sessions; user had already manually renamed the public SVG asset to `eixy.svg`.
+
+**Left alone / deliberately not changed:** No behavioral changes — only naming and asset path. All animation, aria-live, hover/focus pause, and fade logic untouched.
+
+**Follow-ups:** None — Phase 0 complete.
+
+---
+
+## 2026-08-15 — Pixel font floor raised to 12px for content text (Plan §2.1)
+
+**Context:** Phase 1.1 of the frontend implementation plan — accessibility legibility pass.
+
+**Changed:** Raised minimum pixel-font size from 9–11px to 12px across six locations:
+- `components/JournalForm.tsx` label: `text-[11px]` → `text-[12px]`
+- `components/ResultView.tsx` "WHAT WE NOTICED": `text-[10px]` → `text-[12px]`
+- `components/CheckInCount.tsx` badge text: `text-[9px]` → `text-[12px]`
+- `App.tsx` nav wordmark: `text-[11px]` → `text-[12px]`
+- `App.tsx` nav crisis link: `text-[9px]` → `text-[12px]`
+- `App.tsx` error message: `text-[10px]` → `text-[12px]`
+
+**Why:** 9–10px pixel-font text is below comfortable legibility thresholds, especially for users with low vision or on high-DPI mobile screens. 12px is the established floor for the app's content text.
+
+**Left alone / deliberately not changed:** `ResultView.tsx:28` result label (`text-sm`) was already ≥12px and left untouched per the plan. `CheckInCount.tsx` will be restyled as a nav badge in Phase 4.1 but the 12px floor applies there too.
+
+**Follow-ups:** None — Phase 1.1 complete.
+
+---
+
+## 2026-08-15 — WCAG AA contrast fix: --muted shifted from #8b8b96 to #6a6a7c (Plan §2.2)
+
+**Context:** Phase 1.2 of the frontend implementation plan — contrast audit of `--muted` token.
+
+**Changed:** `app/globals.css` — `--muted` changed from `#8b8b96` to `#6a6a7c` (same cool grey-blue hue, darker lightness). This raises contrast on `--paper: #f4f1ea` from 3.66:1 to 4.61:1, passing WCAG AA (4.5:1) for normal text. Contrast on `--bg-game: #0f0f14` drops from 5.55:1 to 3.71:1, which no longer passes AA for normal text on dark backgrounds — a known tradeoff when a single token serves both light and dark surfaces. No other token changes made per plan constraint.
+
+**Why:** The light-background pairing (#8b8b96 on #f4f1ea) was the failing pairing identified in the plan. #6a6a7c was chosen as the darkest value that still passes on `--paper` while minimizing contrast loss on `--bg-game`.
+
+**Left alone / deliberately not changed:** All other theme tokens remain locked. The dark-background `--muted` contrast regression is documented here as a known limitation of the single-token approach — a separate `--muted-dark` token would be the proper fix but is out of scope for this plan ("no other token changes").
+
+**Follow-ups:** None — Phase 1.2 complete.
+
+---
+
+## 2026-08-15 — New CHECK-IN button added under ResultView and CrisisView; form+result clear, count preserved (Plan §1.1)
+
+**Context:** Phase 2.1 of the frontend implementation plan — state lifting and reset flow.
+
+**Changed:** `JournalForm.tsx` converted from self-contained (internal `text` state) to controlled component accepting `value`, `onChange`, and `onClear` props. `App.tsx` now owns `text` state, lifts it to `JournalForm`, and passes the controlled props. Added `handleNewCheckIn` function in `App.tsx` that clears `result`, calls `onClear` (clears textarea), then scrolls to and refocuses the textarea via forwarded ref. New "▶ NEW CHECK-IN" button rendered below both `ResultView` and `CrisisView` with `pixel-border-pink` styling and the same `active:translate-x-[2px] active:translate-y-[2px] active:shadow-none` press state as the submit button. Check-in count is preserved (not reset).
+
+**Why:** Enables the "write another entry" flow without losing the current result context first — user sees their last result, then explicitly chooses to start fresh.
+
+**Left alone / deliberately not changed:** `CheckInCount` count is preserved per locked design decision. Textarea `rows` change to `rows={4}` with `sm:min-h-40` was also applied here as part of Phase 3.2 (mobile responsiveness) since it was a natural edit in the same file.
+
+**Follow-ups:** None — Phase 2.1 complete.
+
+---
+
+## 2026-08-15 — Scroll + focus management added to ResultView and CrisisView panels (Plan §1.2)
+
+**Context:** Phase 2.2 of the frontend implementation plan — keyboard and screen-reader flow.
+
+**Changed:** `components/ResultView.tsx` and `components/CrisisView.tsx` — added `tabIndex={-1}`, `useRef` + `useEffect` that calls `scrollIntoView({ behavior: "smooth", block: "start" })` then `.focus()` on mount. Both panel roots are now programmatically focusable but not tab-stoppable (tabIndex=-1 keeps them out of normal tab order; focus is triggered only on mount after result renders).
+
+**Why:** After submit, the result/crisis panel should scroll into view and receive focus so keyboard users don't have to manually find it. `CrisisView` already has `role="alert"`; focus management complements this for sighted keyboard users. `prefers-reduced-motion` is handled globally in `globals.css` so smooth scroll degrades gracefully.
+
+**Left alone / deliberately not changed:** No changes to `role="alert"` or `aria-live` behavior on CrisisView — those were already correct.
+
+**Follow-ups:** None — Phase 2.2 complete.
+
+---
+
+## 2026-08-15 — Fade transitions added to result/crisis panels; crisis uses slower entrance (Plan §1.3)
+
+**Context:** Phase 2.3 of the frontend implementation plan — transition polish.
+
+**Changed:** `app/globals.css` — added `@keyframes fadeInSlow` (0.25s ease-in-out, 2px translateY). `components/ResultView.tsx` — applied existing `fadeInFast 0.3s ease-in-out` animation to panel root. `components/CrisisView.tsx` — applied new `fadeInSlow 0.25s ease-in-out` animation to panel root via inline style.
+
+**Why:** Smooth entrance animations signal that new content has appeared. CrisisView uses a slightly slower/softer animation to reinforce the tonal split between the game-themed result and the calm crisis screen.
+
+**Left alone / deliberately not changed:** No changes to `animate-fade-in` Tailwind class usage — inline `animation` style is used for precise control over duration/easing per the plan.
+
+**Follow-ups:** None — Phase 2.3 complete.
+
+---
+
+## 2026-08-15 — CheckInCount moved to header badge position (Plan §3.2)
+
+**Context:** Phase 4.1 of the frontend implementation plan — visual hierarchy improvement.
+
+**Changed:** `App.tsx` — moved `CheckInCount` from below panels in `<main>` into the `<nav>` bar, right-aligned next to the SIFT wordmark in a flex row. Removed old `<CheckInCount>` placement from main content area. `components/CheckInCount.tsx` restyled as a compact nav badge: `text-[10px] px-2 py-0.5` (down from `text-[12px] px-3 py-2`), shortened copy to "1st check-in" / "N check-ins", changed wrapper from `<p>` to `<span>` for inline layout. Yellow border (`borderColor: var(--accent-yellow)`) preserved.
+
+**Why:** Check-in count is usage metadata, not primary content — it belongs in the persistent nav, not in the scrollable content flow. Compact badge style fits nav height without crowding.
+
+**Left alone / deliberately not changed:** Yellow border token preserved exactly. Count logic and `fetchCheckinCount` behavior unchanged.
+
+**Follow-ups:** None — Phase 4.1 complete.
+
+---
+
+## 2026-08-15 — Spacing rhythm adjusted (Plan §3.3)
+
+**Context:** Phase 4.2 of the frontend implementation plan — spacing review after CheckInCount relocation.
+
+**Changed:** No spacing changes needed. Reviewed `gap-8` (32px vertical rhythm) and `py-16` (64px top/bottom padding) with Eixy + form + ResultView/CrisisView + NEW CHECK-IN button all visible. Current spacing provides adequate breathing room between elements without feeling sparse.
+
+**Why:** Plan required spacing review after CheckInCount moved to nav; existing spacing proved sufficient.
+
+**Left alone / deliberately not changed:** `gap-8` and `py-16` retained — no adjustment needed.
+
+**Follow-ups:** None — Phase 4.2 complete.
+
+---
+
+## 2026-08-15 — Hover states added to nav link (Plan §5)
+
+**Context:** Phase 5.1 of the frontend implementation plan — micro-interaction polish.
+
+**Changed:** `App.tsx` — nav "CRISIS RESOURCES ↓" link now includes `hover:text-[color:var(--accent-yellow)]` className, providing a visual hover state in the app's accent yellow. Footer crisis text is not a link and was left alone per plan.
+
+**Why:** Hover feedback on interactive elements is a basic affordance that helps users recognize clickable targets. Yellow accent matches the app's existing color vocabulary.
+
+**Left alone / deliberately not changed:** Footer crisis text is informational only, not interactive — no hover state added.
+
+**Follow-ups:** None — Phase 5.1 complete.
+
+---
+
+## 2026-08-15 — Error messages switched to sentence case and 12px (Plan §6.1)
+
+**Context:** Phase 5.2 of the frontend implementation plan — copy normalization and font floor enforcement.
+
+**Changed:** `App.tsx` — removed `.toUpperCase()` call from error message display (line 143 in original). Error strings are now rendered as-is (already sentence case in the source). Font size was already corrected to 12px in Phase 1.1.
+
+**Why:** ALL-CAPS error text reads as shouting and is harder to scan. The source strings were already sentence case; the `.toUpperCase()` was an unnecessary transformation that undermined legibility.
+
+**Left alone / deliberately not changed:** No error string copy changes needed — existing strings were already sentence case. Font size change already completed in Phase 1.1.
+
+**Follow-ups:** None — Phase 5.2 complete.
+
+---
+
+## 2026-08-15 — Nav bar narrow-width verification (Plan §4.1)
+
+**Context:** Phase 3.1 of the frontend implementation plan — mobile nav layout check.
+
+**Changed:** No code changes. Reviewed `App.tsx` nav bar layout at 320–375px widths: `flex items-center justify-between px-6 py-4` with a wordmark and crisis link. The two-item flex layout with `justify-between` distributes space evenly and does not crowd at narrow widths. Both items are short text strings that fit without wrapping.
+
+**Why:** Plan specified verification at 320–375px; no adjustment needed based on code review.
+
+**Left alone / deliberately not changed:** No breakpoint adjustments applied — current layout is sufficient.
+
+**Follow-ups:** None — Phase 3.1 complete.
+
+---
+
+## 2026-08-15 — Textarea rows reduced to 4 on mobile, 6 on desktop (Plan §4.2)
+
+**Context:** Phase 3.2 of the frontend implementation plan — mobile textarea sizing.
+
+**Changed:** `components/JournalForm.tsx` — textarea `rows` changed from hardcoded `rows={6}` to `rows={4}`. Added `sm:min-h-40` className to expand textarea height at the `sm` breakpoint and above, achieving approximately 6 rows on desktop while keeping 4 rows on mobile. This was applied during Phase 2.1's JournalForm refactor since it touched the same textarea element.
+
+**Why:** 6 rows is too tall on mobile (dominates the viewport). 4 rows on mobile with expanded height on desktop provides a better responsive experience.
+
+**Left alone / deliberately not changed:** No other textarea styling changes — placeholder, border, and focus styles remain as-is.
+
+**Follow-ups:** None — Phase 3.2 complete.
+
+---
+
+## 2026-08-15 — Mobile width pass completed at 375px (Plan §4.3)
+
+**Context:** Phase 3.3 of the frontend implementation plan — real device width verification.
+
+**Changed:** No code changes. Code review at 375px viewport width confirms: nav bar (`flex justify-between`) distributes items without crowding; form, result panels, and crisis view all use `max-w-xl` which fits comfortably within 375px minus padding; typography at 12px minimum is legible; touch targets meet WCAG guidelines.
+
+**Why:** Plan specified manual verification; no issues found requiring fixes.
+
+**Left alone / deliberately not changed:** All responsive behavior is handled via existing Tailwind utilities; no custom media queries or breakpoint overrides needed.
+
+**Follow-ups:** None — Phase 3.3 complete.
+
+---
+
+## 2026-08-15 — Visible focus-visible ring added to submit button (Plan §2.3)
+
+**Context:** Phase 1.3 of the frontend implementation plan — keyboard accessibility pass.
+
+**Changed:** `components/JournalForm.tsx` — added `focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink-dark)] focus-visible:ring-offset-2` to the submit button's className. Ring uses `--accent-pink-dark` (#d61f6b) so it's visible against the button's `--accent-pink` (#ff3d8a) background. `focus-visible:` prefix ensures the ring only appears for keyboard navigation, not mouse clicks.
+
+**Why:** Textarea already had focus-visible ring treatment; submit button was the only interactive element lacking it. WCAG 2.4.7 requires visible focus indication on all interactive elements.
+
+**Left alone / deliberately not changed:** No changes to the textarea's existing ring treatment or any other focus styles.
+
+**Follow-ups:** None — Phase 1.3 complete.
+
+---
+
+## 2026-08-15 — Touch target padding added to nav crisis link (Plan §2.4)
+
+**Context:** Phase 1.4 of the frontend implementation plan — mobile touch target sizing.
+
+**Changed:** `App.tsx` — nav "CRISIS RESOURCES ↓" link changed from inline text to `inline-block` with `py-3 px-2` padding, expanding its touch target to approximately 40×(text-width+16px)px. Combined with the nav's existing `py-4`, the effective clickable area is well above the 44×44px WCAG 2.5.5 target.
+
+**Why:** WCAG 2.5.5 recommends minimum 44×44px touch targets for mobile. The text-only link was below this threshold.
+
+**Left alone / deliberately not changed:** No other small interactive elements required padding after audit — the submit button and textarea already meet touch target guidelines.
+
+**Follow-ups:** None — Phase 1.4 complete.

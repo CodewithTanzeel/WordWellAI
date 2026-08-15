@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 type Resource = { name: string; contact: string };
 
 type CrisisResult = {
@@ -6,17 +8,27 @@ type CrisisResult = {
   resources: Resource[];
 };
 
-// Deliberately outside the pixel/game theme: calm palette, serif type,
-// no game chrome. This screen should read as a break in tone on purpose.
 export function CrisisView({ result }: { result: CrisisResult }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.focus();
+  }, []);
+
   return (
     <div
+      ref={panelRef}
+      tabIndex={-1}
       data-testid="crisis-panel"
       role="alert"
       className="w-full max-w-xl rounded-2xl border p-6"
       style={{
         backgroundColor: "var(--accent-crisis-soft)",
         borderColor: "var(--accent-crisis-border)",
+        animation: "fadeInSlow 0.25s ease-in-out",
       }}
     >
       <div className="flex items-start gap-3">

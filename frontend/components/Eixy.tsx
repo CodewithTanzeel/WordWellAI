@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-type HixyState = "intro" | "positive" | "elevated";
+type EixyState = "intro" | "positive" | "elevated";
 
-const DIALOGUE: Record<HixyState, string> = {
-  intro: "Hi, I'm Hixy! This box doesn't judge. Say the messy stuff, the small stuff, whatever's actually true today.",
+const DIALOGUE: Record<EixyState, string> = {
+  intro: "Hi, I'm Eixy! This box doesn't judge. Say the messy stuff, the small stuff, whatever's actually true today.",
   positive:
     "Good to hear. Thanks for putting it into words — noticing this stuff matters more than people think.",
   elevated:
@@ -11,26 +11,24 @@ const DIALOGUE: Record<HixyState, string> = {
 };
 
 type Props = {
-  state: HixyState;
+  state: EixyState;
   isVisible?: boolean;
 };
 
-export function Hixy({ state, isVisible = false }: Props) {
+export function Eixy({ state, isVisible = false }: Props) {
   const [showBubble, setShowBubble] = useState(isVisible);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    if (!isVisible) {
-      setShowBubble(false);
-      return;
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setShowBubble(isVisible);
+    if (!isVisible) return;
 
-    setShowBubble(true);
-    // Fade out after 8 seconds, but allow user to interact to reset
-    const fadeTimer = setTimeout(() => {
+    timerRef.current = setTimeout(() => {
       setShowBubble(false);
     }, 8000);
 
-    return () => clearTimeout(fadeTimer);
+    return () => clearTimeout(timerRef.current);
   }, [isVisible, state]);
 
   return (
@@ -39,11 +37,11 @@ export function Hixy({ state, isVisible = false }: Props) {
       onMouseEnter={() => isVisible && setShowBubble(true)}
       onFocus={() => isVisible && setShowBubble(true)}
     >
-      {/* Hixy sprite */}
+      {/* Eixy sprite */}
       <div className="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24">
         <img
-          src="/hixy.svg"
-          alt="Hixy, a pixel-art companion"
+          src="/eixy.svg"
+          alt="Eixy, a pixel-art companion"
           className="w-full h-full pixelated"
           style={{ imageRendering: "pixelated" }}
         />

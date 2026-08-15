@@ -1,3 +1,5 @@
+import { useEffect, useRef } from "react";
+
 type Result = {
   status: "ok";
   label: string;
@@ -11,17 +13,31 @@ function formatLabel(label: string): string {
 }
 
 export function ResultView({ result }: { result: Result }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = panelRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.focus();
+  }, []);
+
   const percent = Math.round(result.confidence * 100);
   const segments = 10;
   const filledSegments = Math.round((percent / 100) * segments);
 
   return (
     <div
+      ref={panelRef}
+      tabIndex={-1}
       data-testid="result-panel"
-      className="pixel-border w-full max-w-xl p-6"
-      style={{ backgroundColor: "var(--paper)" }}
+      className="pixel-border w-full max-w-xl p-6 animate-fade-in"
+      style={{
+        backgroundColor: "var(--paper)",
+        animation: "fadeInFast 0.3s ease-in-out",
+      }}
     >
-      <p className="font-pixel text-[10px] tracking-wide text-[color:var(--muted)]">
+      <p className="font-pixel text-[12px] tracking-wide text-[color:var(--muted)]">
         WHAT WE NOTICED
       </p>
 
