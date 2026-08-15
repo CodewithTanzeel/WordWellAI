@@ -115,6 +115,7 @@ export function App() {
       setError("Couldn't reach the server. Please try again.");
     } finally {
       setIsSubmitting(false);
+      setShowEixy(true);
     }
   }
 
@@ -141,7 +142,6 @@ export function App() {
 
       <main className="mx-auto flex w-full max-w-2xl flex-col items-center gap-8 px-6 py-16">
         <header className="flex flex-col items-center gap-4 text-center">
-          <Eixy state="intro" isVisible={showEixy} />
           <h1 className="font-pixel text-3xl text-[color:var(--paper)] sm:text-4xl">
             SIFT
           </h1>
@@ -184,6 +184,12 @@ export function App() {
             ▶ NEW CHECK-IN
           </button>
         )}
+
+        <Eixy
+          state="intro"
+          isVisible={showEixy && !result}
+          isListening={text.trim().length > 0}
+        />
 
         <div className="mt-auto w-full pt-8">
           <PixelSkyline />

@@ -340,3 +340,20 @@ Purpose: give future-us (or future-Claude) full context without having to re-der
 **Left alone / deliberately not changed:** No other small interactive elements required padding after audit — the submit button and textarea already meet touch target guidelines.
 
 **Follow-ups:** None — Phase 1.4 complete.
+
+---
+
+## 2026-08-15 — Eixy repositioned to fixed floating spot with idle, walking, and reaction animations
+
+**Context:** Implemented the Eixy lively intro and reaction plan (`1786813154887-eixy-lively-intro-reactions.md`) — making the companion feel alive with positioning, animations, and typing reactivity.
+
+**Changed:**
+- `components/Eixy.tsx` — removed from `<header>`, repositioned to `fixed bottom-6 right-4 sm:bottom-8 sm:right-8` so it floats in the bottom-right quadrant independent of scroll. Added `isListening` prop. Added idle `eixyFloat` CSS class (gentle bob, 3s infinite). Added walking animation via `animate-eixy-walk` class when `isListening` is true (side-to-side translateX, 0.6s infinite). Added reaction bounces: `animate-eixy-bounce-fast` for positive results (0.6s) and `animate-eixy-bounce-slow` for elevated results (1.2s). Added word-by-word intro text reveal with 400ms initial delay and 80ms stagger per word using `eixyWordReveal` keyframes. Added `aria-label="Eixy, your companion"` on the sprite container. Wrapped sprite div in `key={\`\${state}-\${isListening}\`}` to force remount when animation type changes, fixing React animation-restart issues.
+- `App.tsx` — moved `<Eixy>` out of `<header>` and placed it at the end of `<main>` as a fixed element. Passes `isListening={text.trim().length > 0}` so Eixy paces while typing. On submit, `showEixy` resets to `true` in the `finally` block so Eixy reappears with the result-state bubble. `handleNewCheckIn` resets to intro state via `setShowEixy(true)`.
+- `app/globals.css` — added keyframes: `eixyFloat`, `eixyWalk`, `eixyBounceFast`, `eixyBounceSlow`, `eixyWordReveal`. Added utility classes `.animate-eixy-float`, `.animate-eixy-walk`, `.animate-eixy-bounce-fast`, `.animate-eixy-bounce-slow`. Existing `@media (prefers-reduced-motion: reduce)` rule disables all new animations globally.
+
+**Why:** Makes Eixy feel responsive and alive — she introduces herself with animated text, idles with a gentle float, paces while the user types, and reacts with distinct bounces to results. Fixed positioning keeps her visible without disrupting form layout.
+
+**Left alone / deliberately not changed:** Eye-blink animation was considered but deferred — the current `eixy.svg` is a single flat image without separable layers, so whole-sprite transforms are the only viable approach without new artwork. The 8s auto-fade + hover/focus pause logic from the original component is preserved intact.
+
+**Follow-ups:** None — Eixy animation implementation complete.
