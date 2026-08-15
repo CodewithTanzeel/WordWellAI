@@ -9,10 +9,12 @@ type Props = {
   onChange: (text: string) => void;
   onSubmit: (text: string) => void;
   isSubmitting?: boolean;
+  /** True when the last submit attempt failed — swaps the button label to an explicit retry affordance. */
+  hasError?: boolean;
 };
 
 const JournalForm = forwardRef<HTMLTextAreaElement, Props>(
-  ({ value, onChange, onSubmit, isSubmitting = false }: Props, ref) => {
+  ({ value, onChange, onSubmit, isSubmitting = false, hasError = false }: Props, ref) => {
     const isTooLong = value.length > MAX_LENGTH;
     const isEmpty = value.trim().length === 0;
     const canSubmit = !isEmpty && !isTooLong && !isSubmitting;
@@ -65,10 +67,10 @@ const JournalForm = forwardRef<HTMLTextAreaElement, Props>(
         <button
           type="submit"
           disabled={!canSubmit}
-          className="pixel-border-pink font-pixel mt-4 w-full px-6 py-3 text-[11px] text-white transition-transform focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink-dark)] focus-visible:ring-offset-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+          className="pixel-border-pink font-pixel mt-4 w-full px-6 py-3 text-[12px] text-white transition-transform focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink-dark)] focus-visible:ring-offset-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
           style={{ backgroundColor: "var(--accent-pink)" }}
         >
-          {isSubmitting ? "▶ THINKING…" : "▶ CHECK IN"}
+          {isSubmitting ? "▶ THINKING…" : hasError ? "▶ TRY AGAIN" : "▶ CHECK IN"}
         </button>
       </form>
     );

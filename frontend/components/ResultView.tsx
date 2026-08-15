@@ -62,7 +62,7 @@ export function ResultView({ result }: { result: Result }) {
             />
           ))}
         </div>
-        <span className="font-pixel text-[11px] text-[color:var(--accent-green-dark)]">
+        <span className="font-pixel text-[12px] text-[color:var(--accent-green-dark)]">
           {percent}%
         </span>
       </div>

@@ -19,7 +19,7 @@ const pressStart2P = Press_Start_2P({
 });
 
 export const metadata: Metadata = {
-  title: "Sift",
+  title: "WordWell",
   description: "A pixel companion for checking in with yourself.",
 };
 

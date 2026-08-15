@@ -125,25 +125,26 @@ export function App() {
           crisis resources, instead of placeholder pages this app
           doesn't have. */}
       <nav
-        className="flex items-center justify-between px-6 py-4"
+        className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-6 py-4"
         style={{ backgroundColor: "var(--accent-pink)" }}
       >
         <div className="flex items-center gap-3">
-          <span className="font-pixel text-[12px] text-white">SIFT</span>
+          <span className="font-pixel text-[12px] text-white">WORDWELL</span>
           <CheckInCount count={count} />
         </div>
         <a
           href="#crisis-resources"
           className="font-pixel inline-block py-3 px-2 text-[12px] text-white underline decoration-2 underline-offset-4 hover:text-[color:var(--accent-yellow)]"
         >
-          CRISIS RESOURCES ↓
+          <span className="sm:hidden">CRISIS ↓</span>
+          <span className="hidden sm:inline">CRISIS RESOURCES ↓</span>
         </a>
       </nav>
 
       <main className="mx-auto flex w-full max-w-2xl flex-col items-center gap-8 px-6 py-16">
         <header className="flex flex-col items-center gap-4 text-center">
           <h1 className="font-pixel text-3xl text-[color:var(--paper)] sm:text-4xl">
-            SIFT
+            WORDWELL
           </h1>
           <p className="max-w-md text-sm leading-relaxed text-[color:var(--muted)]">
             Write a few lines about how you&apos;re doing. This is a
@@ -157,6 +158,7 @@ export function App() {
           onChange={setText}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
+          hasError={!!error}
         />
 
         {error && (
@@ -169,27 +171,18 @@ export function App() {
         )}
 
         {result && !result.crisis && <ResultView result={result} />}
-        {result && !result.crisis && (
-          <Eixy state={getEixyState(result) || "positive"} isVisible={true} />
-        )}
         {result && result.crisis && <CrisisView result={result} />}
 
         {result && (
           <button
             type="button"
             onClick={handleNewCheckIn}
-            className="pixel-border-pink font-pixel px-6 py-3 text-[11px] text-white transition-transform active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+            className="pixel-border-pink font-pixel px-6 py-3 text-[12px] text-white transition-transform focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink-dark)] focus-visible:ring-offset-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
             style={{ backgroundColor: "var(--accent-pink)" }}
           >
             ▶ NEW CHECK-IN
           </button>
         )}
-
-        <Eixy
-          state="intro"
-          isVisible={showEixy && !result}
-          isListening={text.trim().length > 0}
-        />
 
         <div className="mt-auto w-full pt-8">
           <PixelSkyline />
@@ -202,6 +195,15 @@ export function App() {
           </footer>
         </div>
       </main>
+
+      {/* Fixed, floating in the bottom-right corner independent of scroll —
+          not part of the CrisisView boundary: hidden there per the locked
+          tonal-split decision (DESIGN_LOG.md). */}
+      <Eixy
+        state={result && !result.crisis ? getEixyState(result) ?? "positive" : "intro"}
+        isVisible={showEixy && !(result && result.crisis)}
+        isListening={!result && text.trim().length > 0}
+      />
     </div>
   );
 }

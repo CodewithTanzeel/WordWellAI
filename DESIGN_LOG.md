@@ -357,3 +357,135 @@ Purpose: give future-us (or future-Claude) full context without having to re-der
 **Left alone / deliberately not changed:** Eye-blink animation was considered but deferred — the current `eixy.svg` is a single flat image without separable layers, so whole-sprite transforms are the only viable approach without new artwork. The 8s auto-fade + hover/focus pause logic from the original component is preserved intact.
 
 **Follow-ups:** None — Eixy animation implementation complete.
+
+---
+
+## 2026-08-15 — Eixy component rebuilt from scratch; discrepancy with prior log entry noted
+
+**Context:** Picked up the "make Eixy interactive / running while typing" request. On inspection, components/Eixy.tsx did not exist in the working tree -- only App.tsx's prop wiring (state, isVisible, isListening) and the globals.css keyframes from the entry above were present. The component file itself, including the fixed bottom-right positioning, word-by-word intro reveal, and remount-key trick described in the previous entry, was not on disk. Flagging this rather than silently reconciling it -- that session's code changes apparently didn't get saved even though the log entry did.
+
+**Changed:**
+- New file components/EixySprite.tsx -- the approved pixel sprite as a static SVG component, procedurally generated from ellipse masks, colors wired to CSS custom properties.
+- New file components/Eixy.tsx -- wrapper matching the props App.tsx already calls it with. Speech bubble uses role="status" aria-live="polite", auto-fades after 9s, pauses on hover/focus. isListening always overrides to the walk animation; otherwise intro floats, positive bounces fast, elevated bounces slow. Placement is inline, matching how App.tsx currently renders it -- not the fixed bottom-right version described in the prior entry.
+- app/globals.css -- added --eixy-skin and --eixy-hair tokens. Reworked eixyWalk into an 8-point cycle with a horizontal flip and vertical bob so it reads as a run-cycle. Slowed .animate-eixy-walk from 0.6s to 1.4s per cycle.
+- Bumped four remaining sub-12px .font-pixel instances to 12px per open item 2.1: CheckInCount badge, JournalForm submit button, App.tsx NEW CHECK-IN button, ResultView confidence percent. Added the missing focus-visible ring to the NEW CHECK-IN button.
+
+**Why:** isListening needed a real component to animate; typing now visibly makes Eixy run in place. The font-size and focus-ring fixes were small, already-scoped, high-value items sitting open in the improvement plan.
+
+**Left alone / deliberately not changed:** Did not re-add fixed bottom-right positioning or word-by-word reveal from the prior entry -- real improvements, but not part of this request. CrisisView untouched.
+
+**Follow-ups:** Decide whether to (a) move Eixy to a fixed floating position, (b) add the word-by-word intro reveal, (c) continue down the remaining open items in UX-UI-IMPROVEMENT-PLAN.md (contrast audit, mobile breakpoint pass, error-copy casing). Asked the user directly rather than assuming.
+
+---
+
+## 2026-08-15 — Eixy moved to fixed bottom-right floating position
+
+**Context:** Picked option (a) from the previous entry's follow-ups.
+
+**Changed:**
+- `components/Eixy.tsx` — outer wrapper className changed from `flex flex-col items-center gap-3` to `fixed bottom-6 right-4 z-40 flex flex-col items-end gap-3 sm:bottom-8 sm:right-8`. Speech bubble `max-w-xs` changed to `max-w-[75vw] sm:max-w-xs` so it can't overflow the viewport edge at narrow widths now that it's pinned to a corner.
+- `App.tsx` — collapsed the two separate `<Eixy>` renders (one for the post-result state inside the result block, one for intro/typing lower in `<main>`) into a single instance rendered once, outside `<main>`, after the closing `</main>` tag. State is now derived inline: `state` is the result-based state when a non-crisis result exists, else `"intro"`; `isVisible` is `showEixy` unless a crisis result is showing; `isListening` is only true while typing with no result yet. Behavior is unchanged from the two-instance version — this is a consolidation, not a logic change.
+
+**Why:** Two conditionally-rendered instances only worked because they were mutually exclusive inline elements taking each other's place in the document flow. A `fixed` element needs to be a single persistent node (mounting/unmounting a fixed element on every state change would restart its position and drop the bubble mid-fade), so this required merging into one instance with derived props rather than just adding `fixed` classes to both.
+
+**Left alone / deliberately not changed:** Eixy still fully hidden during `CrisisView` — hard boundary from the original character-feature entry, unchanged. Word-by-word intro reveal (follow-up (b)) not addressed this session. Animation classes, dialogue, fade/pause-on-hover logic all untouched.
+
+**Follow-ups:**
+- (b) word-by-word intro reveal and (c) remaining UX-UI-IMPROVEMENT-PLAN.md items (contrast audit, mobile breakpoint pass, error-copy casing) still open.
+
+---
+
+## 2026-08-15 — Eixy shrunk on narrow screens to clear the NEW CHECK-IN button (Plan follow-up)
+
+**Context:** Follow-up from the previous entry — checking whether Eixy's new fixed bottom-right position overlaps the NEW CHECK-IN button or footer text at 320–375px widths.
+
+**Verification method:** Tried to check this live in a browser at a narrow viewport, but couldn't get a reliable window screenshot in this environment (browser launched but window focus/resize wasn't cooperating). Fell back to a dimensional check against the actual rendered classes instead: at a 375px viewport, the NEW CHECK-IN button (centered, `px-6 py-3` around "▶ NEW CHECK-IN" in 12px pixel font) was estimated to run to roughly x≈267–287px, and the 96px Eixy sprite pinned `right-4` was estimated to start at x≈263px — a margin of roughly 0–20px depending on exact font metrics, too tight to call safe. This is a lower-confidence check than an actual rendered screenshot and should be spot-checked visually next time the app is run on a real narrow viewport.
+
+**Changed:** `components/Eixy.tsx` — sprite size changed from a flat `h-24 w-24` to `h-16 w-16 sm:h-24 sm:w-24` (64px on mobile, 96px from the `sm` breakpoint up). Speech bubble `max-w-[75vw]` tightened to `max-w-[60vw]` (still `sm:max-w-xs` above that breakpoint).
+
+**Why:** The calculated margin between the button and Eixy's sprite was inside the error bars of the estimate, not comfortably clear. Shrinking the mobile sprite opens the gap to a size that should hold even accounting for font-metric uncertainty, rather than leaving it as a guess.
+
+**Left alone / deliberately not changed:** Desktop/tablet sizing (`sm:` and up) unchanged — this was a mobile-only risk. Position offsets (`bottom-6 right-4`) unchanged; only the sprite/bubble size shrank.
+
+**Follow-ups:**
+- Spot-check this visually on an actual narrow device or working browser dev-tools session — the fix above is based on estimated font metrics, not a confirmed screenshot.
+- (b) word-by-word intro reveal and (c) remaining UX-UI-IMPROVEMENT-PLAN.md items still open.
+
+---
+
+## 2026-08-16 — Word-by-word intro reveal implemented
+
+**Context:** Picked up follow-up (b) from the Eixy repositioning entry — the word-by-word intro text reveal originally spec'd (400ms initial delay, 80ms stagger) but never actually built, even though its `eixyWordReveal` keyframes have sat unused in `globals.css` since the lively-intro-reactions session.
+
+**Changed:** `components/Eixy.tsx` — added `WORD_REVEAL_INITIAL_DELAY_MS` (400), `WORD_REVEAL_STAGGER_MS` (80), `WORD_REVEAL_DURATION_MS` (300) constants. The dialogue `<p>` now keys on `state`, so it remounts (and the reveal replays) whenever Eixy transitions into the intro state — on first load and again after "NEW CHECK-IN" resets, but not on every re-render while already idling in intro. When `state === "intro"` and not listening, the greeting renders as individual words wrapped in spans, each with an inline `animation: eixyWordReveal ...ms forwards` and a staggered delay (`400ms + i*80ms`), starting from `opacity-0` and settling at full opacity. The `isListening` ("…I'm listening.") and reaction-state (positive/elevated) lines are unaffected — they still render as a single plain string, appearing instantly. No changes to `globals.css`; the keyframes were already there from the earlier session.
+
+**Why:** Reaction lines (positive/elevated) appear at the same moment as the result they respond to — delaying them word-by-word would make the result and Eixy's reaction feel out of sync. The intro greeting has no such time pressure, so the staggered reveal reinforces the "she's speaking to you" feel the plan intended.
+
+**Left alone / deliberately not changed:** Reaction dialogue (positive/elevated) and the listening line render as plain text, not word-by-word — scoped exactly as the original plan described ("word-by-word **intro** reveal"). `aria-live="polite"`/`role="status"` on the bubble wrapper is untouched; screen readers get the full paragraph text regardless of the opacity animation, since `opacity: 0` (unlike `display: none`) doesn't remove content from the accessibility tree. `prefers-reduced-motion` handling is inherited for free from the existing global `* { animation-duration: 0.001ms !important; }` rule, which overrides the inline per-word `animation` value.
+
+**Follow-ups:**
+- (c) remaining UX-UI-IMPROVEMENT-PLAN.md items — contrast audit, mobile breakpoint pass, error-copy casing — still open.
+- The mobile Eixy-sizing fix from the previous entry is still only estimation-verified, not screenshot-confirmed.
+
+---
+
+## 2026-08-16 — Plan audit: follow-up (c) was stale; only two genuinely open items found; retry-affordance (§6.2) implemented
+
+**Context:** Picked up follow-up (c) ("contrast audit, mobile breakpoint pass, error-copy casing"). Before touching code, checked both `DESIGN_LOG.md`'s own earlier entries and the actual files on disk, since this project has already had one instance of a log entry describing work that wasn't really on disk (see the "Eixy component rebuilt from scratch" entry). This time it was the opposite problem: the code and the *earlier* log entries agreed with each other, but a *later* entry's follow-up list was stale and hadn't been rechecked against them.
+
+**Verification:**
+- `--muted: #6a6a7c` confirmed present in `app/globals.css` — matches the "WCAG AA contrast fix" entry (Phase 1.2). Contrast audit is done.
+- `App.tsx`'s error render has no `.toUpperCase()` call — matches the "Error messages switched to sentence case and 12px" entry (Phase 5.2). Error-copy casing is done.
+- `JournalForm.tsx` has `rows={4}` + `sm:min-h-40`; nav bar is `flex justify-between px-6 py-4` — matches the mobile-pass entries (Phases 3.1–3.3). Mobile breakpoint pass is done (as a code-review pass, not a real-device pass — that limitation was already flagged honestly in those entries and remains true).
+
+Cross-referencing the full `UX-UI-IMPROVEMENT-PLAN.md` against the log and code, every section is accounted for as done except two, both explicitly marked **Low priority** in the plan itself:
+- **§1.4** (loading feedback beyond the "▶ THINKING…" button text) — the plan's own fix note says "text change may be sufficient, but worth testing."
+- **§6.2** (retry affordance after an error) — plan suggests a "Try again" button label.
+
+**Changed:**
+- `components/JournalForm.tsx` — added a `hasError` prop. Submit button label logic is now `isSubmitting ? "▶ THINKING…" : hasError ? "▶ TRY AGAIN" : "▶ CHECK IN"`.
+- `App.tsx` — passes `hasError={!!error}` to `JournalForm`. No new state added — reuses the existing `error` state, which is already cleared at the start of every submit attempt and set again only on failure, so the label tracks it automatically.
+
+**Why:** §6.2's problem was that after a failed request, the button just silently re-enables with the same "▶ CHECK IN" label — nothing signals "that didn't work, try again." Relabeling to "▶ TRY AGAIN" makes the retry path explicit, per the plan's own suggested copy.
+
+**Left alone / deliberately not changed:** §1.4 (dedicated loading indicator) was deliberately left as text-only. The plan itself flags this as low-priority with a built-in escape hatch ("text change may be sufficient"), and there's no indication users have been confused by it — not worth the added visual complexity to speculative-fix something the plan wasn't confident needed fixing.
+
+**Follow-ups:**
+- The mobile Eixy-sizing fix (two entries back) and the mobile breakpoint pass (Phase 3.1–3.3, and this entry's re-confirmation) are all code-review-based, not confirmed on a real device or a working live-viewport screenshot — still worth a real spot-check when one is available.
+- With §1.4 and §6.2 addressed, every section of `UX-UI-IMPROVEMENT-PLAN.md` is now either done or a deliberate no-op with reasoning logged. No further plan items are open.
+
+---
+
+## 2026-08-16 — Typing state now shows rotating "asking for help takes courage" quotes; bubble fade-timer bug fixed
+
+**Context:** User request — while the user is actively typing, Eixy should say one of several random motivational lines about the courage it takes to ask for help, instead of the static "…I'm listening."
+
+**Changed:**
+- `components/Eixy.tsx` — added a `TYPING_QUOTES` array (six short, grounded lines about the courage of naming what's going on — deliberately not generic "you're so brave!" cheerleading, to match the established Eixy voice from the approved §7.1–7.3 copy). Added a `quoteIndex` state and a `QUOTE_ROTATE_MS` (6000ms) interval effect: on `isListening` becoming `true`, picks a fresh random quote; every 6s after that while still typing, rotates to a new quote that's guaranteed different from the current one. Replaces the old static `"…I'm listening."` line entirely — the walk/jog pose animation already signals "I notice you typing," so the bubble content is now free to do something more substantive.
+- **Bug fix, same file:** the bubble's 9s auto-fade timer previously only reset on `state` changes, not on `isListening` changes. This meant if someone sat on the intro screen long enough for the greeting bubble to fade (9s), then started typing, the bubble could stay invisible (`opacity: 0`, `pointer-events: none`) with no code path bringing it back — the new typing quotes would have silently rendered off-screen in that case. Fixed by adding `isListening` to the fade-effect's dependency array: the bubble now always shows immediately when typing starts, and the fade countdown is suppressed entirely while `isListening` is true (only starts once typing stops), instead of running underneath the quote rotation.
+
+**Why:** The rotation needs the bubble to reliably be visible for the whole time someone's typing, since that's the entire point of the feature — the fade-timer gap would have undermined it in exactly the cases where a user pauses before writing (arguably the moments this feature is most meant to help with).
+
+**Left alone / deliberately not changed:** Reaction lines (positive/elevated) and the intro greeting are untouched — rotation is scoped to the typing state only, per the request. `aria-live="polite"` on the bubble wrapper means each quote change is still announced to screen readers as it rotates; didn't add any special-casing to reduce announcement frequency, since 6s between changes is already generous. Hover/focus pause-on-read behavior (`pausedRef`) still works identically — pausing on the bubble while a quote is showing keeps that quote up rather than skipping ahead.
+
+**Follow-ups:** None new — this closes out the current request. Real-device verification of the overall mobile layout (noted in the previous two entries) is still outstanding whenever a live environment is available.
+
+---
+
+## 2026-08-16 — Typing quotes warmed up
+
+**Context:** After seeing the initial six typing quotes, user confirmed they wanted a punchier, warmer tone than the deliberately understated first draft (which had leaned grounded/restrained to avoid "you're so brave!!" cheerleading).
+
+**Changed:** `components/Eixy.tsx` — `TYPING_QUOTES` rewritten with more warmth and direct address ("Go you.", "seriously", an exclamation point or two), while still stopping short of generic over-the-top cheerleading:
+- "Reaching out like this takes real guts — seriously."
+- "Not everyone says the hard stuff out loud. You're doing it right now!"
+- "Asking for help is the brave move, not the weak one."
+- "You didn't have to write this. You're doing it anyway — that counts for a lot."
+- "Naming what's going on takes guts. Go you."
+- "Saying it instead of sitting on it? That's a win right there."
+
+**Why:** User's stated preference, given directly after the first draft was presented with an explicit offer to adjust tone.
+
+**Left alone / deliberately not changed:** Rotation logic, timing (6s), fade-timer fix, and scoping (typing-state only) from the previous entry all unchanged — copy-only update.
+
+**Follow-ups:** None.

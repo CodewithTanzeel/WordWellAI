@@ -22,6 +22,10 @@
   --muted: #6a6a7c;
   --border: #0f0f14;
 
+  /* Eixy-only tokens (not part of the general game palette) */
+  --eixy-skin: #f6d9bd;
+  --eixy-hair: #eceae3;
+
   /* Crisis screen — deliberately NOT part of the game palette */
   --calm-bg: #f6f4ee;
   --calm-surface: #ffffff;
@@ -114,13 +118,28 @@ body {
 
 @keyframes eixyWalk {
   0%, 100% {
-    transform: translateX(0);
+    transform: translateX(0) scaleX(1) translateY(0);
   }
-  25% {
-    transform: translateX(-10px);
+  12% {
+    transform: translateX(-8px) scaleX(-1) translateY(-2px);
   }
-  75% {
-    transform: translateX(10px);
+  24% {
+    transform: translateX(-14px) scaleX(-1) translateY(0);
+  }
+  36% {
+    transform: translateX(-8px) scaleX(-1) translateY(-2px);
+  }
+  50% {
+    transform: translateX(0) scaleX(-1) translateY(0);
+  }
+  62% {
+    transform: translateX(8px) scaleX(1) translateY(-2px);
+  }
+  74% {
+    transform: translateX(14px) scaleX(1) translateY(0);
+  }
+  86% {
+    transform: translateX(8px) scaleX(1) translateY(-2px);
   }
 }
 
@@ -176,7 +195,7 @@ body {
 }
 
 .animate-eixy-walk {
-  animation: eixyWalk 0.6s ease-in-out infinite;
+  animation: eixyWalk 1.4s ease-in-out infinite;
 }
 
 .animate-eixy-bounce-fast {
