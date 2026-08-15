@@ -1,26 +1,93 @@
 @import "tailwindcss";
 
+/*
+  Sift — pixel/retro-game token system
+  Full-commit game aesthetic everywhere EXCEPT the crisis screen,
+  which intentionally keeps its own calm, non-game palette and type
+  so it reads as a deliberate break in tone, not an inconsistency.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-game: #0f0f14;
+  --panel-sky: #bee3f8;
+  --panel-sky-cloud: #ffffff;
+  --ink: #0f0f14;
+  --paper: #f4f1ea;
+
+  --accent-pink: #ff3d8a;
+  --accent-pink-dark: #d61f6b;
+  --accent-green: #39d97a;
+  --accent-green-dark: #1fa85c;
+  --accent-yellow: #ffd23f;
+
+  --muted: #8b8b96;
+  --border: #0f0f14;
+
+  /* Crisis screen — deliberately NOT part of the game palette */
+  --calm-bg: #f6f4ee;
+  --calm-surface: #ffffff;
+  --calm-ink: #2b2a28;
+  --calm-muted: #6f6b62;
+  --accent-crisis: #8f4f57;
+  --accent-crisis-soft: #f3e6e5;
+  --accent-crisis-border: #e0c3c1;
+
+  --font-pixel: var(--font-geist-pixel), "Courier New", monospace;
+  --font-serif: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-game);
+  --color-foreground: var(--paper);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+body {
+  background: var(--bg-game);
+  color: var(--paper);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Chunky pixel-border technique: hard corners + layered shadow
+   instead of a normal 1px border, so edges read as "stepped". */
+.pixel-border {
+  border-radius: 0;
+  border: 3px solid var(--ink);
+  box-shadow:
+    4px 0 0 0 var(--ink),
+    0 4px 0 0 var(--ink),
+    4px 4px 0 0 var(--ink);
+}
+
+.pixel-border-pink {
+  border-radius: 0;
+  border: 3px solid var(--ink);
+  box-shadow:
+    4px 0 0 0 var(--accent-pink-dark),
+    0 4px 0 0 var(--accent-pink-dark),
+    4px 4px 0 0 var(--accent-pink-dark);
+}
+
+.font-pixel {
+  font-family: var(--font-pixel);
+  letter-spacing: 0.02em;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes fadeInFast {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
