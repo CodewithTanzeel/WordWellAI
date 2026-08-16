@@ -1,22 +1,29 @@
+import os
+
 from fastapi import FastAPI, Request, HTTPException, Header
-from app.safety import is_high_risk
-import app.model_client as model_client
-from app import checkins
 from fastapi.middleware.cors import CORSMiddleware
-API_KEY = "YOUR_SECRET_KEY"  
+
+from app import checkins
+import app.model_client as model_client
+from app.safety import is_high_risk
+
+API_KEY = os.environ.get("API_KEY")
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 @app.middleware("http")
 async def require_api_key(request: Request, call_next):
-    # Skip health‑check endpoints if you like
     if request.url.path in {"/healthz", "/readyz"}:
         return await call_next(request)
+
+    if not API_KEY:
+        return await call_next(request)
+
     key = request.headers.get("X-API-Key")
     if key != API_KEY:
         raise HTTPException(status_code=401, detail="Invalid or missing API key")
     return await call_next(request)
-    
+
 @app.on_event("startup")
 def startup():
     checkins.init_db()
@@ -79,6 +86,5 @@ def get_checkins(request: Request):
 @app.on_event("shutdown")
 def shutdown():
     """Delete the SQLite DB file on shutdown so each test starts fresh."""
-    import os
-    if os.path.exists("checkins.db"):
-        os.remove("checkins.db")
+    if os.path.exists(checkins.DB_PATH):
+        os.remove(checkins.DB_PATH)
