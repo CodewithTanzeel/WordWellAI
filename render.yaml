@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: wordwellai-backend
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: HF_SPACE_URL
+        value: "warishabilal05/my-lfm25-demo"
+      - key: HF_TOKEN
+        sync: false
+      - key: API_KEY
+        sync: false
