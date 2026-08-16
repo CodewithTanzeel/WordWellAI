@@ -2,6 +2,34 @@ import { useEffect, useRef } from "react";
 
 type Resource = { name: string; contact: string };
 
+function contactHref(contact: string): string {
+  const lower = contact.toLowerCase();
+  const phoneMatch = contact.match(/[\d+()-]{7,}/);
+  if (lower.includes("text") && phoneMatch) {
+    const number = phoneMatch[0].replace(/[^+\d]/g, "");
+    return `sms:${number}`;
+  }
+  if (lower.includes("call") && phoneMatch) {
+    const number = phoneMatch[0].replace(/[^+\d]/g, "");
+    return `tel:${number}`;
+  }
+  if (phoneMatch) {
+    const number = phoneMatch[0].replace(/[^+\d]/g, "");
+    return `tel:${number}`;
+  }
+  if (contact.startsWith("http")) return contact;
+  return "#";
+}
+
+function contactLabel(contact: string): string {
+  const lower = contact.toLowerCase();
+  const phoneMatch = contact.match(/[\d+()-]{7,}/);
+  if (!phoneMatch) return contact;
+  const number = phoneMatch[0];
+  if (lower.includes("text")) return `Text ${number}`;
+  return `Call ${number}`;
+}
+
 type CrisisResult = {
   crisis: true;
   message: string;
@@ -56,7 +84,12 @@ export function CrisisView({ result }: { result: CrisisResult }) {
             <span className="block font-medium text-[color:var(--calm-ink)]">
               {resource.name}
             </span>
-            <span className="text-[color:var(--calm-muted)]">{resource.contact}</span>
+            <a
+              href={contactHref(resource.contact)}
+              className="text-[color:var(--accent-crisis)] underline underline-offset-2 hover:brightness-110 transition-all duration-150"
+            >
+              {contactLabel(resource.contact)}
+            </a>
           </li>
         ))}
       </ul>

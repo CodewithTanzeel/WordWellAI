@@ -205,3 +205,18 @@ body {
 .animate-eixy-bounce-slow {
   animation: eixyBounceSlow 1.2s ease-in-out;
 }
+
+@keyframes spinPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.6);
+  }
+}
+
+.animate-spin-pulse {
+  animation: spinPulse 0.8s ease-in-out infinite;
+}

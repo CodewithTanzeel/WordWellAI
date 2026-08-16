@@ -67,10 +67,17 @@ export function App() {
   const [showEixy, setShowEixy] = useState(true);
   const [text, setText] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
 
   useEffect(() => {
     fetchCheckinCount().then(setCount);
   }, []);
+
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.focus();
+    }
+  }, [error]);
 
   function handleClear() {
     setText("");
@@ -134,7 +141,7 @@ export function App() {
         </div>
         <a
           href="#crisis-resources"
-          className="font-pixel inline-block py-3 px-2 text-[12px] text-white underline decoration-2 underline-offset-4 hover:text-[color:var(--accent-yellow)]"
+          className="font-pixel inline-block py-3 px-2 text-[12px] text-white underline decoration-2 underline-offset-4 transition-all duration-150 hover:brightness-110 hover:text-[color:var(--accent-yellow)]"
         >
           <span className="sm:hidden">CRISIS ↓</span>
           <span className="hidden sm:inline">CRISIS RESOURCES ↓</span>
@@ -163,8 +170,9 @@ export function App() {
 
         {error && (
           <p
+            ref={errorRef}
             role="alert"
-            className="font-pixel text-[12px] leading-relaxed text-[color:var(--accent-crisis)]"
+            className="font-pixel text-[12px] leading-relaxed text-[color:var(--accent-crisis)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-crisis)]"
           >
             {error}
           </p>
@@ -177,7 +185,7 @@ export function App() {
           <button
             type="button"
             onClick={handleNewCheckIn}
-            className="pixel-border-pink font-pixel px-6 py-3 text-[12px] text-white transition-transform focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink-dark)] focus-visible:ring-offset-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+            className="pixel-border-pink font-pixel px-6 py-3 text-[12px] text-white transition-all duration-150 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink-dark)] focus-visible:ring-offset-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
             style={{ backgroundColor: "var(--accent-pink)" }}
           >
             ▶ NEW CHECK-IN

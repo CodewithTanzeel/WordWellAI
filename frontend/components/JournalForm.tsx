@@ -67,9 +67,16 @@ const JournalForm = forwardRef<HTMLTextAreaElement, Props>(
         <button
           type="submit"
           disabled={!canSubmit}
-          className="pixel-border-pink font-pixel mt-4 w-full px-6 py-3 text-[12px] text-white transition-transform focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink-dark)] focus-visible:ring-offset-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+          className="pixel-border-pink font-pixel mt-4 flex w-full items-center justify-center gap-2 px-6 py-3 text-[12px] text-white transition-all duration-150 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink-dark)] focus-visible:ring-offset-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
           style={{ backgroundColor: "var(--accent-pink)" }}
         >
+          {isSubmitting && (
+            <span
+              aria-hidden="true"
+              className="inline-block h-3 w-3 animate-spin-pulse bg-white"
+              style={{ borderRadius: 0 }}
+            />
+          )}
           {isSubmitting ? "▶ THINKING…" : hasError ? "▶ TRY AGAIN" : "▶ CHECK IN"}
         </button>
       </form>

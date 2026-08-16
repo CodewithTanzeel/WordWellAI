@@ -429,6 +429,26 @@ Purpose: give future-us (or future-Claude) full context without having to re-der
 
 ---
 
+## 2026-08-16 — Batch A: crisis links, spinner, error focus, result bridge, hover feedback (Plan §Batch A)
+
+**Context:** First implementation batch from `1786866535417-batched-attention-retention-plan.md` — quick-win UX fixes across five sub-changes, no new components.
+
+**Changed:**
+- `components/CrisisView.tsx` — resource contact text replaced with `<a>` tags. `contactHref()` parses the contact string: "call" + number → `tel:`; "text" + number → `sms:`; bare number → `tel:`; `http` prefix → passthrough URL. `contactLabel()` strips the verb prefix and shows "Call NNN" or "Text NNN". Links use `text-[color:var(--accent-crisis)] underline underline-offset-2` plus the A5 hover class. CrisisView's calm-serif palette and no-game-chrome boundary is unchanged.
+- `components/JournalForm.tsx` — submit button now conditionally renders a 12×12px square `<span aria-hidden="true">` with `animate-spin-pulse` class (opacity/scale pulse, 0.8s infinite) when `isSubmitting` is true, positioned via `flex items-center justify-center gap-2` beside the "▶ THINKING…" label. Button's `transition-transform` upgraded to `transition-all duration-150 hover:brightness-110`. `forwardRef` contract and all prop types unchanged.
+- `App.tsx` — added `errorRef = useRef<HTMLParagraphElement>(null)` and a `useEffect([error])` that calls `errorRef.current.focus()` when error becomes non-null. Error `<p role="alert">` gained `ref={errorRef}`, `outline-none`, and `focus-visible:ring-2 focus-visible:ring-[color:var(--accent-crisis)]`. The pre-existing `fetchCheckinCount` effect is preserved.
+- `components/ResultView.tsx` — added a `SUGGESTIONS` map (9 label→string pairs covering joy, gratitude, calm, anxiety, sadness, anger, fear, hope, neutral) and a `getSuggestion(label)` fallback. Renders a `font-pixel text-[11px] text-[color:var(--muted)]` line after the confidence bar via `getSuggestion(result.label)`. Unexpected labels hit the fallback string — no crash path.
+- `App.tsx` — crisis nav link gained `transition-all duration-150 hover:brightness-110` (added alongside existing `hover:text-[color:var(--accent-yellow)]`). NEW CHECK-IN button gained the same pair, replacing the narrower `transition-transform` class.
+- `app/globals.css` — added `@keyframes spinPulse` and `.animate-spin-pulse` utility for the JournalForm spinner. No token changes.
+
+**Why:** Each change targets a specific friction point from the UX audit: non-interactive crisis resources (A1), no visible submit-state indicator beyond text (A2), screen-reader/keyboard users left without a focus target on error (A3), result panel had no actionable bridge between the confidence bar and disclaimer (A4), three interactive buttons/links lacked hover feedback (A5).
+
+**Left alone / deliberately not changed:** CrisisView's calm-serif palette, rounded-2xl container, and absence of Eixy/game chrome are all untouched — the hard tonal boundary from the original build is preserved. `forwardRef` contract on JournalForm is unchanged (only className and button internals edited). `prefers-reduced-motion` handling requires no per-component guards — the existing global `* { animation-duration: 0.001ms !important; }` in `globals.css:81-85` already catches the new `spinPulse` animation. Backend crisis response shape (`main.py:36-45`) is unchanged — the frontend parser handles the single hardcoded resource without requiring a backend change.
+
+**Follow-ups:** Batch B (Eixy thinking + waiting poses) follows immediately per the plan. Mobile real-device screenshot verification of the Eixy overlap fix remains outstanding from prior sessions.
+
+---
+
 ## 2026-08-16 — Plan audit: follow-up (c) was stale; only two genuinely open items found; retry-affordance (§6.2) implemented
 
 **Context:** Picked up follow-up (c) ("contrast audit, mobile breakpoint pass, error-copy casing"). Before touching code, checked both `DESIGN_LOG.md`'s own earlier entries and the actual files on disk, since this project has already had one instance of a log entry describing work that wasn't really on disk (see the "Eixy component rebuilt from scratch" entry). This time it was the opposite problem: the code and the *earlier* log entries agreed with each other, but a *later* entry's follow-up list was stale and hadn't been rechecked against them.

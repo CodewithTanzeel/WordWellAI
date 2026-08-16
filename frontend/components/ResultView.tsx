@@ -12,6 +12,22 @@ function formatLabel(label: string): string {
   return label.replace(/_/g, " ").toUpperCase();
 }
 
+const SUGGESTIONS: Record<string, string> = {
+  joy: "Notice what brought this — it's worth remembering.",
+  gratitude: "Name the person or moment that made this happen.",
+  calm: "This peace didn't arrive by accident — what helped?",
+  anxiety: "Name one small thing you can control right now.",
+  sadness: "It's okay to feel this. You don't have to fix it alone.",
+  anger: "What boundary was crossed? Naming it is a start.",
+  fear: "What's the next small step, not the whole path?",
+  hope: "Hold onto this — even a little goes a long way.",
+  neutral: "Sometimes 'okay' is enough. No pressure to feel more.",
+};
+
+function getSuggestion(label: string): string {
+  return SUGGESTIONS[label.toLowerCase()] ?? "Take a breath and notice how you feel right now.";
+}
+
 export function ResultView({ result }: { result: Result }) {
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +82,10 @@ export function ResultView({ result }: { result: Result }) {
           {percent}%
         </span>
       </div>
+
+      <p className="mt-3 font-pixel text-[11px] text-[color:var(--muted)]">
+        {getSuggestion(result.label)}
+      </p>
 
       <p className="mt-5 text-sm leading-relaxed text-[color:var(--muted)]">
         {result.disclaimer}
