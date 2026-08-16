@@ -69,6 +69,11 @@ export function App() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
 
+  const lastCheckIn =
+    typeof window !== "undefined"
+      ? window.localStorage.getItem("sift-last-checkin")
+      : null;
+
   useEffect(() => {
     fetchCheckinCount().then(setCount);
   }, []);
@@ -114,6 +119,9 @@ export function App() {
         setResult(null);
       } else {
         setResult(data as AnalyzeResult);
+        if (typeof window !== "undefined") {
+          window.localStorage.setItem("sift-last-checkin", new Date().toISOString());
+        }
       }
 
       const nextCount = await fetchCheckinCount();
@@ -166,6 +174,7 @@ export function App() {
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           hasError={!!error}
+          lastCheckIn={lastCheckIn ?? undefined}
         />
 
         {error && (

@@ -512,6 +512,22 @@ Cross-referencing the full `UX-UI-IMPROVEMENT-PLAN.md` against the log and code,
 
 ---
 
+## 2026-08-16 — Session continuity, auto-grow textarea, keyboard submit, and cursor clarity (Plan 1786867493653-ux-round2-plan.md, C1–C5)
+
+**Context:** Round 2 UX improvements — small, safe edits across `App.tsx` and `JournalForm.tsx`, no token changes, no CrisisView chrome changes.
+
+**Changed:**
+- `App.tsx` — on successful submit in `handleSubmit`, writes `localStorage.setItem("sift-last-checkin", new Date().toISOString())`. Reads the key at component init and passes it as `lastCheckIn` prop to `JournalForm`.
+- `JournalForm.tsx` — added `lastCheckIn?: string` prop. When present, renders a `font-pixel text-[11px] text-[color:var(--muted)]` line above the textarea label: "Last check-in: [relative time]", formatted with `Intl.RelativeTimeFormat`-style logic (just now / X min ago / X hr ago / date string). Textarea `rows` changed from fixed `rows={4}` to dynamic `rows={Math.min(8, Math.max(4, Math.ceil(value.length / 80)))}` — grows one row per ~80 chars, floor 4, ceiling 8. Removed `sm:min-h-40` (dynamic rows now handle sizing at all breakpoints; the class was a workaround for the old hardcoded height). Added `onKeyDown` handler: Ctrl+Enter / Cmd+Enter submits when `canSubmit` is true, without preventing default on other keys. Added `disabled:cursor-not-allowed` to the textarea className to match the submit button's disabled cursor affordance.
+
+**Why:** C1 gives users a reason to return by showing the last actual submission timestamp (timestamp-only, no free-text stored, avoiding privacy risk in a mental-health context). C2 lets long reflections grow naturally within the form and lets keyboard users submit without reaching for the button. C3 removes ambiguity when the field is greyed out during a request. C4 is a visual spot-check only — no code change; Eixy sprite (`right-4`, `h-16 w-16` = 64px) at 375px width should be verified for overlap with the centered NEW CHECK-IN button; if found, bump to `h-12 w-12` on mobile. C5 is documented as a known edge case (no code change) — users with both `prefers-reduced-motion` and `prefers-contrast: more` may see a slight static offset from animation final-state transforms; fix only if reported.
+
+**Left alone / deliberately not changed:** "NEW CHECK-IN" button does not clear the `sift-last-checkin` timestamp — it persists across form resets so the next visit still sees the last actual submission time. `canSubmit` logic already gates keyboard shortcut submission correctly (prevents submit when `isSubmitting` or empty/too-long). `CrisisView` is untouched — hard tonal boundary preserved. `prefers-reduced-motion` global rule (`* { animation-duration: 0.001ms !important; }`) already catches any new animations, no per-component guards needed. No token changes.
+
+**Follow-ups:** C4 requires visual spot-check at 375px width in dev-tools; apply `h-12 w-12` on mobile if overlap is found. C5 fix deferred — only implement if a user with both `prefers-reduced-motion` and `prefers-contrast: more` reports the offset.
+
+---
+
 ## 2026-08-16 — Batch B: Eixy thinking and waiting poses (Plan §Batch B)
 
 **Context:** Second implementation batch from `1786866535417-batched-attention-retention-plan.md` — two new animation states for Eixy so the character doesn't feel frozen during model calls or long idle periods.

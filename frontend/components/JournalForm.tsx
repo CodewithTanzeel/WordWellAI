@@ -11,10 +11,26 @@ type Props = {
   isSubmitting?: boolean;
   /** True when the last submit attempt failed — swaps the button label to an explicit retry affordance. */
   hasError?: boolean;
+  lastCheckIn?: string;
 };
 
+function formatRelativeTime(iso: string): string {
+  const now = Date.now();
+  const then = new Date(iso).getTime();
+  const diffMs = now - then;
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return "just now";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin} min ago`;
+  const diffHr = Math.floor(diffMin / 60);
+  if (diffHr < 24) return `${diffHr} hr ago`;
+  const d = new Date(iso);
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  return `${months[d.getMonth()]} ${d.getDate()}`;
+}
+
 const JournalForm = forwardRef<HTMLTextAreaElement, Props>(
-  ({ value, onChange, onSubmit, isSubmitting = false, hasError = false }: Props, ref) => {
+  ({ value, onChange, onSubmit, isSubmitting = false, hasError = false, lastCheckIn }: Props, ref) => {
     const isTooLong = value.length > MAX_LENGTH;
     const isEmpty = value.trim().length === 0;
     const canSubmit = !isEmpty && !isTooLong && !isSubmitting;
@@ -23,6 +39,13 @@ const JournalForm = forwardRef<HTMLTextAreaElement, Props>(
       e.preventDefault();
       if (!canSubmit) return;
       onSubmit(value);
+    }
+
+    function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && canSubmit) {
+        e.preventDefault();
+        onSubmit(value);
+      }
     }
 
     return (
@@ -38,15 +61,22 @@ const JournalForm = forwardRef<HTMLTextAreaElement, Props>(
           WHAT&apos;S ON YOUR MIND?
         </label>
 
+        {lastCheckIn && (
+          <p className="font-pixel mb-2 text-[11px] text-[color:var(--muted)]">
+            Last check-in: {formatRelativeTime(lastCheckIn)}
+          </p>
+        )}
+
         <textarea
           ref={ref}
           id="journal-entry"
           value={value}
           onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
           disabled={isSubmitting}
-          rows={4}
+          rows={Math.min(8, Math.max(4, Math.ceil(value.length / 80)))}
           placeholder="Write freely — there's no wrong way to say it."
-          className="w-full resize-none border-2 bg-white p-4 text-base leading-relaxed text-[color:var(--ink)] outline-none transition-colors placeholder:text-[color:var(--muted)] focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink)] disabled:opacity-60 sm:min-h-40"
+          className="w-full resize-none border-2 bg-white p-4 text-base leading-relaxed text-[color:var(--ink)] outline-none transition-colors placeholder:text-[color:var(--muted)] focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink)] disabled:opacity-60 disabled:cursor-not-allowed"
           style={{
             borderRadius: 0,
             borderColor: isTooLong ? "var(--accent-crisis)" : "var(--ink)",
