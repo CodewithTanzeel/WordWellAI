@@ -29,3 +29,13 @@ def mock_model_timeout(monkeypatch):
         raise Exception("model timeout")
     monkeypatch.setattr(model_client, "call_model", fake_call_model)
     yield
+
+# conftest.py (add)
+@pytest.fixture
+def capture_model_call(monkeypatch):
+    captured = {}
+    def fake_call_model(text):
+        captured["text"] = text
+        return {"label": "test", "confidence": 0.5}
+    monkeypatch.setattr("app.model_client.call_model", fake_call_model)
+    yield captured

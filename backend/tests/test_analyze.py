@@ -24,6 +24,13 @@ def test_normal_response_includes_disclaimer_text(client, mock_model_ok, device_
     resp = client.post("/api/analyze", json={"text": "feeling okay today"}, headers=device_headers)
     assert "not a diagnosis" in resp.json()["disclaimer"].lower()
 
+def test_analyze_uses_model_input(client, capture_model_call, device_headers):
+    client.post(
+        "/api/analyze",
+        json={"text": "my feeling"},
+        headers=device_headers,
+    )
+    assert capture_model_call["text"] == "my feeling"
 
 # ---- crisis path ----
 

@@ -1,12 +1,22 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Header
 from app.safety import is_high_risk
 import app.model_client as model_client
 from app import checkins
 from fastapi.middleware.cors import CORSMiddleware
-
+API_KEY = "YOUR_SECRET_KEY"  
 app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
+@app.middleware("http")
+async def require_api_key(request: Request, call_next):
+    # Skip health‑check endpoints if you like
+    if request.url.path in {"/healthz", "/readyz"}:
+        return await call_next(request)
+    key = request.headers.get("X-API-Key")
+    if key != API_KEY:
+        raise HTTPException(status_code=401, detail="Invalid or missing API key")
+    return await call_next(request)
+    
 @app.on_event("startup")
 def startup():
     checkins.init_db()
