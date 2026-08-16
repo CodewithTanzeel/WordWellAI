@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EixySprite } from "./EixySprite";
 
 export type EixyState = "intro" | "positive" | "elevated";
@@ -14,8 +14,8 @@ const DIALOGUE: Record<EixyState, string> = {
     "That sounds like a lot to carry. I'm glad you said it out loud instead of sitting on it. I'll be here whenever you want to check in again.",
 };
 
-// Shown one at a time, in random rotation, while the user is actively typing —
-// warm, encouraging lines about what it takes to put this into words at all.
+const WAITING_LINE = "Take your time.";
+
 const TYPING_QUOTES: string[] = [
   "Reaching out like this takes real guts — seriously.",
   "Not everyone says the hard stuff out loud. You're doing it right now!",
@@ -25,60 +25,59 @@ const TYPING_QUOTES: string[] = [
   "Saying it instead of sitting on it? That's a win right there.",
 ];
 
-// Generous fade so it never disappears mid-read; pauses on hover/focus.
 const FADE_MS = 9000;
-
-// How often the typing-state quote rotates while the user keeps typing.
 const QUOTE_ROTATE_MS = 6000;
-
-// Word-by-word intro reveal timing.
 const WORD_REVEAL_INITIAL_DELAY_MS = 400;
 const WORD_REVEAL_STAGGER_MS = 80;
 const WORD_REVEAL_DURATION_MS = 300;
+const WAITING_TIMEOUT_MS = 20000;
 
 type Props = {
   state: EixyState;
   isVisible: boolean;
-  /** True while the user has text in the box — triggers the "listening" run-in-place animation. */
   isListening?: boolean;
+  isThinking?: boolean;
 };
 
-export function Eixy({ state, isVisible, isListening = false }: Props) {
+export function Eixy({ state, isVisible, isListening = false, isThinking = false }: Props) {
   const [bubbleVisible, setBubbleVisible] = useState(true);
   const [quoteIndex, setQuoteIndex] = useState(0);
+  const [isWaiting, setIsWaiting] = useState(false);
   const pausedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const waitingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function clearTimer() {
+  const clearFadeTimer = useCallback(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-  }
+  }, []);
 
-  function startTimer() {
-    clearTimer();
+  const startFadeTimer = useCallback(() => {
+    clearFadeTimer();
     if (!pausedRef.current) {
       timerRef.current = setTimeout(() => setBubbleVisible(false), FADE_MS);
     }
-  }
+  }, [clearFadeTimer]);
 
-  // Re-announce whenever the line changes. While actively typing, keep the
-  // bubble visible continuously rather than letting it fade mid-quote-rotation
-  // — the fade countdown only starts once typing stops.
+  const clearWaitingTimer = useCallback(() => {
+    if (waitingTimerRef.current) {
+      clearTimeout(waitingTimerRef.current);
+      waitingTimerRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     setBubbleVisible(true);
-    if (isListening) {
-      clearTimer();
+    if (isListening || isThinking) {
+      clearFadeTimer();
     } else {
-      startTimer();
+      startFadeTimer();
     }
-    return clearTimer;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, isListening]);
+    return clearFadeTimer;
+  }, [state, isListening, isThinking, clearFadeTimer, startFadeTimer]);
 
-  // Pick a fresh random quote each time typing starts, then rotate to a new
-  // (non-repeating) random quote on an interval for as long as typing continues.
   useEffect(() => {
     if (!isListening || TYPING_QUOTES.length === 0) return;
     setQuoteIndex(Math.floor(Math.random() * TYPING_QUOTES.length));
@@ -95,39 +94,50 @@ export function Eixy({ state, isVisible, isListening = false }: Props) {
     return () => clearInterval(interval);
   }, [isListening]);
 
+  useEffect(() => {
+    setIsWaiting(false);
+    clearWaitingTimer();
+    if (!isVisible || isListening || isThinking) return;
+    waitingTimerRef.current = setTimeout(() => {
+      setIsWaiting(true);
+    }, WAITING_TIMEOUT_MS);
+    return clearWaitingTimer;
+  }, [state, isListening, isThinking, isVisible, clearWaitingTimer]);
+
   function handlePause() {
     pausedRef.current = true;
-    clearTimer();
+    clearFadeTimer();
   }
 
   function handleResume() {
     pausedRef.current = false;
-    startTimer();
+    startFadeTimer();
   }
 
   if (!isVisible) return null;
 
-  // Listening (typing) always wins — Eixy jogs in place, actively paying attention.
-  // Otherwise the pose reflects the current dialogue state.
+  // Pose priority: isListening > isThinking > result-state > waiting/idle
   const poseClass = isListening
     ? "animate-eixy-walk"
-    : state === "intro"
-      ? "animate-eixy-float"
-      : state === "positive"
-        ? "animate-eixy-bounce-fast"
-        : "animate-eixy-bounce-slow";
+    : isThinking
+      ? "animate-eixy-think"
+      : isWaiting
+        ? "animate-eixy-wait"
+        : state === "intro"
+          ? "animate-eixy-float"
+          : state === "positive"
+            ? "animate-eixy-bounce-fast"
+            : "animate-eixy-bounce-slow";
 
-  // Word-by-word reveal is reserved for the intro greeting — the reaction
-  // lines (positive/elevated) land as a single line so they read instantly
-  // alongside the result they're responding to.
-  const showWordReveal = state === "intro" && !isListening;
+  const displayState = isWaiting ? "waiting" : state;
+  const showWordReveal = state === "intro" && !isListening && !isWaiting;
   const introWords = DIALOGUE.intro.split(" ");
 
   return (
     <div
       data-testid="eixy"
       className="fixed bottom-6 right-4 z-40 flex flex-col items-end gap-3 sm:bottom-8 sm:right-8"
-      aria-label={`Eixy, ${isListening ? "listening" : state}`}
+      aria-label={`Eixy, ${isListening ? "listening" : isThinking ? "thinking" : displayState}`}
     >
       <div
         role="status"
@@ -145,7 +155,7 @@ export function Eixy({ state, isVisible, isListening = false }: Props) {
         }}
       >
         <p
-          key={state}
+          key={displayState}
           className="font-pixel text-[12px] leading-relaxed text-[color:var(--ink)]"
         >
           {isListening ? (
@@ -163,6 +173,8 @@ export function Eixy({ state, isVisible, isListening = false }: Props) {
                 {i < introWords.length - 1 ? "\u00A0" : ""}
               </span>
             ))
+          ) : isWaiting ? (
+            WAITING_LINE
           ) : (
             DIALOGUE[state]
           )}

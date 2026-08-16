@@ -31,10 +31,23 @@ type AnalyzeResult = NormalResult | CrisisResult;
 function getDeviceId(): string {
   if (typeof window === "undefined") return "server";
   const key = "sift-device-id";
-  let id = window.localStorage.getItem(key);
+  let id: string | null = null;
+  try {
+    id = window.localStorage.getItem(key);
+  } catch {
+    // private browsing or quota exceeded — fall back to a transient id
+  }
   if (!id) {
-    id = crypto.randomUUID();
-    window.localStorage.setItem(key, id);
+    try {
+      id = crypto.randomUUID();
+    } catch {
+      id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    }
+    try {
+      window.localStorage.setItem(key, id);
+    } catch {
+      // silent — persistence is optional
+    }
   }
   return id;
 }
@@ -66,21 +79,35 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [showEixy, setShowEixy] = useState(true);
   const [text, setText] = useState("");
+  const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const errorRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        setLastCheckIn(window.localStorage.getItem("sift-last-checkin"));
+      } catch {
+        // silent — persistence is optional
+      }
+    }
+  }, []);
 
   useEffect(() => {
     fetchCheckinCount().then(setCount);
   }, []);
 
-  function handleClear() {
-    setText("");
-  }
+  useEffect(() => {
+    if (error && errorRef.current) {
+      errorRef.current.focus();
+    }
+  }, [error]);
 
   function handleNewCheckIn() {
     setResult(null);
     setError(null);
     setShowEixy(true);
-    handleClear();
+    setText("");
     requestAnimationFrame(() => {
       textareaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       textareaRef.current?.focus();
@@ -107,6 +134,13 @@ export function App() {
         setResult(null);
       } else {
         setResult(data as AnalyzeResult);
+        if (typeof window !== "undefined") {
+          try {
+            window.localStorage.setItem("sift-last-checkin", new Date().toISOString());
+          } catch {
+            // silent — persistence is optional
+          }
+        }
       }
 
       const nextCount = await fetchCheckinCount();
@@ -134,7 +168,7 @@ export function App() {
         </div>
         <a
           href="#crisis-resources"
-          className="font-pixel inline-block py-3 px-2 text-[12px] text-white underline decoration-2 underline-offset-4 hover:text-[color:var(--accent-yellow)]"
+          className="font-pixel inline-block py-3 px-2 text-[12px] text-white underline decoration-2 underline-offset-4 transition-all duration-150 hover:brightness-110 hover:text-[color:var(--accent-yellow)]"
         >
           <span className="sm:hidden">CRISIS ↓</span>
           <span className="hidden sm:inline">CRISIS RESOURCES ↓</span>
@@ -159,12 +193,14 @@ export function App() {
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           hasError={!!error}
+          lastCheckIn={lastCheckIn ?? undefined}
         />
 
         {error && (
           <p
+            ref={errorRef}
             role="alert"
-            className="font-pixel text-[12px] leading-relaxed text-[color:var(--accent-crisis)]"
+            className="font-pixel text-[12px] leading-relaxed text-[color:var(--accent-crisis)] outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--accent-crisis)]"
           >
             {error}
           </p>
@@ -177,7 +213,7 @@ export function App() {
           <button
             type="button"
             onClick={handleNewCheckIn}
-            className="pixel-border-pink font-pixel px-6 py-3 text-[12px] text-white transition-transform focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink-dark)] focus-visible:ring-offset-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
+            className="pixel-border-pink font-pixel px-6 py-3 text-[12px] text-white transition-all duration-150 hover:brightness-110 focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink-dark)] focus-visible:ring-offset-2 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none"
             style={{ backgroundColor: "var(--accent-pink)" }}
           >
             ▶ NEW CHECK-IN
@@ -203,6 +239,7 @@ export function App() {
         state={result && !result.crisis ? getEixyState(result) ?? "positive" : "intro"}
         isVisible={showEixy && !(result && result.crisis)}
         isListening={!result && text.trim().length > 0}
+        isThinking={isSubmitting}
       />
     </div>
   );

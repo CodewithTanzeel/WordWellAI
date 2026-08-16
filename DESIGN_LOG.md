@@ -429,6 +429,26 @@ Purpose: give future-us (or future-Claude) full context without having to re-der
 
 ---
 
+## 2026-08-16 — Batch A: crisis links, spinner, error focus, result bridge, hover feedback (Plan §Batch A)
+
+**Context:** First implementation batch from `1786866535417-batched-attention-retention-plan.md` — quick-win UX fixes across five sub-changes, no new components.
+
+**Changed:**
+- `components/CrisisView.tsx` — resource contact text replaced with `<a>` tags. `contactHref()` parses the contact string: "call" + number → `tel:`; "text" + number → `sms:`; bare number → `tel:`; `http` prefix → passthrough URL. `contactLabel()` strips the verb prefix and shows "Call NNN" or "Text NNN". Links use `text-[color:var(--accent-crisis)] underline underline-offset-2` plus the A5 hover class. CrisisView's calm-serif palette and no-game-chrome boundary is unchanged.
+- `components/JournalForm.tsx` — submit button now conditionally renders a 12×12px square `<span aria-hidden="true">` with `animate-spin-pulse` class (opacity/scale pulse, 0.8s infinite) when `isSubmitting` is true, positioned via `flex items-center justify-center gap-2` beside the "▶ THINKING…" label. Button's `transition-transform` upgraded to `transition-all duration-150 hover:brightness-110`. `forwardRef` contract and all prop types unchanged.
+- `App.tsx` — added `errorRef = useRef<HTMLParagraphElement>(null)` and a `useEffect([error])` that calls `errorRef.current.focus()` when error becomes non-null. Error `<p role="alert">` gained `ref={errorRef}`, `outline-none`, and `focus-visible:ring-2 focus-visible:ring-[color:var(--accent-crisis)]`. The pre-existing `fetchCheckinCount` effect is preserved.
+- `components/ResultView.tsx` — added a `SUGGESTIONS` map (9 label→string pairs covering joy, gratitude, calm, anxiety, sadness, anger, fear, hope, neutral) and a `getSuggestion(label)` fallback. Renders a `font-pixel text-[11px] text-[color:var(--muted)]` line after the confidence bar via `getSuggestion(result.label)`. Unexpected labels hit the fallback string — no crash path.
+- `App.tsx` — crisis nav link gained `transition-all duration-150 hover:brightness-110` (added alongside existing `hover:text-[color:var(--accent-yellow)]`). NEW CHECK-IN button gained the same pair, replacing the narrower `transition-transform` class.
+- `app/globals.css` — added `@keyframes spinPulse` and `.animate-spin-pulse` utility for the JournalForm spinner. No token changes.
+
+**Why:** Each change targets a specific friction point from the UX audit: non-interactive crisis resources (A1), no visible submit-state indicator beyond text (A2), screen-reader/keyboard users left without a focus target on error (A3), result panel had no actionable bridge between the confidence bar and disclaimer (A4), three interactive buttons/links lacked hover feedback (A5).
+
+**Left alone / deliberately not changed:** CrisisView's calm-serif palette, rounded-2xl container, and absence of Eixy/game chrome are all untouched — the hard tonal boundary from the original build is preserved. `forwardRef` contract on JournalForm is unchanged (only className and button internals edited). `prefers-reduced-motion` handling requires no per-component guards — the existing global `* { animation-duration: 0.001ms !important; }` in `globals.css:81-85` already catches the new `spinPulse` animation. Backend crisis response shape (`main.py:36-45`) is unchanged — the frontend parser handles the single hardcoded resource without requiring a backend change.
+
+**Follow-ups:** Batch B (Eixy thinking + waiting poses) follows immediately per the plan. Mobile real-device screenshot verification of the Eixy overlap fix remains outstanding from prior sessions.
+
+---
+
 ## 2026-08-16 — Plan audit: follow-up (c) was stale; only two genuinely open items found; retry-affordance (§6.2) implemented
 
 **Context:** Picked up follow-up (c) ("contrast audit, mobile breakpoint pass, error-copy casing"). Before touching code, checked both `DESIGN_LOG.md`'s own earlier entries and the actual files on disk, since this project has already had one instance of a log entry describing work that wasn't really on disk (see the "Eixy component rebuilt from scratch" entry). This time it was the opposite problem: the code and the *earlier* log entries agreed with each other, but a *later* entry's follow-up list was stale and hadn't been rechecked against them.
@@ -489,3 +509,60 @@ Cross-referencing the full `UX-UI-IMPROVEMENT-PLAN.md` against the log and code,
 **Left alone / deliberately not changed:** Rotation logic, timing (6s), fade-timer fix, and scoping (typing-state only) from the previous entry all unchanged — copy-only update.
 
 **Follow-ups:** None.
+
+---
+
+## 2026-08-16 — Session continuity, auto-grow textarea, keyboard submit, and cursor clarity (Plan 1786867493653-ux-round2-plan.md, C1–C5)
+
+**Context:** Round 2 UX improvements — small, safe edits across `App.tsx` and `JournalForm.tsx`, no token changes, no CrisisView chrome changes.
+
+**Changed:**
+- `App.tsx` — on successful submit in `handleSubmit`, writes `localStorage.setItem("sift-last-checkin", new Date().toISOString())`. Reads the key at component init and passes it as `lastCheckIn` prop to `JournalForm`.
+- `JournalForm.tsx` — added `lastCheckIn?: string` prop. When present, renders a `font-pixel text-[11px] text-[color:var(--muted)]` line above the textarea label: "Last check-in: [relative time]", formatted with `Intl.RelativeTimeFormat`-style logic (just now / X min ago / X hr ago / date string). Textarea `rows` changed from fixed `rows={4}` to dynamic `rows={Math.min(8, Math.max(4, Math.ceil(value.length / 80)))}` — grows one row per ~80 chars, floor 4, ceiling 8. Removed `sm:min-h-40` (dynamic rows now handle sizing at all breakpoints; the class was a workaround for the old hardcoded height). Added `onKeyDown` handler: Ctrl+Enter / Cmd+Enter submits when `canSubmit` is true, without preventing default on other keys. Added `disabled:cursor-not-allowed` to the textarea className to match the submit button's disabled cursor affordance.
+
+**Why:** C1 gives users a reason to return by showing the last actual submission timestamp (timestamp-only, no free-text stored, avoiding privacy risk in a mental-health context). C2 lets long reflections grow naturally within the form and lets keyboard users submit without reaching for the button. C3 removes ambiguity when the field is greyed out during a request. C4 is a visual spot-check only — no code change; Eixy sprite (`right-4`, `h-16 w-16` = 64px) at 375px width should be verified for overlap with the centered NEW CHECK-IN button; if found, bump to `h-12 w-12` on mobile. C5 is documented as a known edge case (no code change) — users with both `prefers-reduced-motion` and `prefers-contrast: more` may see a slight static offset from animation final-state transforms; fix only if reported.
+
+**Left alone / deliberately not changed:** "NEW CHECK-IN" button does not clear the `sift-last-checkin` timestamp — it persists across form resets so the next visit still sees the last actual submission time. `canSubmit` logic already gates keyboard shortcut submission correctly (prevents submit when `isSubmitting` or empty/too-long). `CrisisView` is untouched — hard tonal boundary preserved. `prefers-reduced-motion` global rule (`* { animation-duration: 0.001ms !important; }`) already catches any new animations, no per-component guards needed. No token changes.
+
+**Follow-ups:** C4 requires visual spot-check at 375px width in dev-tools; apply `h-12 w-12` on mobile if overlap is found. C5 fix deferred — only implement if a user with both `prefers-reduced-motion` and `prefers-contrast: more` reports the offset.
+
+---
+
+## 2026-08-16 — Batch B: Eixy thinking and waiting poses (Plan §Batch B)
+
+**Context:** Second implementation batch from `1786866535417-batched-attention-retention-plan.md` — two new animation states for Eixy so the character doesn't feel frozen during model calls or long idle periods.
+
+**Changed:**
+- `app/globals.css` — added `@keyframes eixyThink` (2.2s ease-in-out infinite: gentle ±3° rotation with ±4px horizontal sway, distinct from the existing float/walk/bounce set) and `@keyframes eixyWait` (4s ease-in-out infinite: slow vertical drift ±3px with a −2° head-tilt at 50%). Added `.animate-eixy-think` and `.animate-eixy-wait` utility classes. No token changes.
+- `components/Eixy.tsx` — added `isThinking?: boolean` prop. Pose priority chain is now: `isListening` → walk, `isThinking` → think, `isWaiting` → wait, result-state (intro/positive/elevated) → float/fast-bounce/slow-bounce. Added a 20s `useEffect` timer: when `isVisible` is true and neither `isListening` nor `isThinking` is active, a timeout fires after 20s setting `isWaiting = true`; any change to `state`, `isListening`, `isThinking`, or `isVisible` cancels the pending timeout and resets `isWaiting` to false. Bubble text for waiting state is `"Take your time."`. Word-by-word intro reveal is suppressed while waiting (`showWordReveal` requires `!isWaiting`). `aria-label` on the outer container reflects the active mode. `forwardRef` is not used on Eixy — no ref contract to maintain.
+- `App.tsx` — passes `isThinking={isSubmitting}` to `<Eixy>`. `isListening` continues to take priority because `isListening` is checked first in Eixy's pose ternary; when the user is typing (isListening=true) during a submit window, Eixy walks regardless of isThinking.
+
+**Why:** The model-call window (typically 1–5s, occasionally longer) previously left Eixy in whatever static pose she was in — either idle float or the last reaction bounce — which reads as frozen. The think pose gives a distinct "working on it" signal. Long idle periods (20s+) previously had no change at all; the wait pose signals continued presence without demanding attention, reducing the sense that the app has stalled.
+
+**Left alone / deliberately not changed:** `CrisisView` boundary is untouched — Eixy is still fully hidden during crisis results. `prefers-reduced-motion` requires no per-component guards — the existing global `* { animation-duration: 0.001ms !important; }` rule in `globals.css:81-85` already catches both new keyframe animations. Eixy sprite size (`h-16 w-16 sm:h-24 sm:w-24`) is unchanged — Batch B adds poses only, no resize. The existing `eixyFloat`, `eixyWalk`, `eixyBounceFast`, `eixyBounceSlow` keyframes and their utility classes are untouched. Backend `main.py` crisis response shape is unchanged.
+
+**Follow-ups:** None — Batch B complete per plan.
+
+---
+
+## 2026-08-16 — UX Round 3: accessibility hardening, resilience, test coverage, and cleanup (Plan 1786869055752-ux-round3-plan.md)
+
+**Context:** Round 3 of the UX improvement series — small, scoped changes closing accessibility gaps, adding browser-API error resilience, and pinning Round 2 / Batch B behavior with automated tests. No theme changes, no CrisisView chrome changes, no new components.
+
+**Changed:**
+- `tests/JournalForm.test.tsx` — added 4 tests: last-check-in render/omit, auto-grow rows (4/5/8), Ctrl+Enter submit gated by canSubmit, Cmd+Enter submit.
+- `tests/App.test.tsx` — added 1 test: successful submit writes `sift-last-checkin` with an ISO string; "NEW CHECK-IN" preserves the value (not cleared).
+- `tests/Eixy.test.tsx` — new file, 6 tests: null when not visible, pose priority (listening > thinking), waiting state after 20s idle and reset on listening, bubble fade suppressed while listening, aria-label reflects active mode, typing quotes rendered while listening.
+- `components/ResultView.tsx` — confidence bar changed from `role="img" aria-label="confidence N%"` to `role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label="confidence"`.
+- `components/CheckInCount.tsx` — removed `aria-live="polite"`; the count is already visible text, the live region added no value and caused redundant screen-reader announcements on every render.
+- `app/globals.css` — added `@media (prefers-contrast: more)` block resetting transform for all Eixy animation classes (`.animate-eixy-float`, `.animate-eixy-walk`, `.animate-eixy-bounce-fast`, `.animate-eixy-bounce-slow`, `.animate-eixy-think`, `.animate-eixy-wait`) to `translateY(0) rotate(0deg)` with `animation: none`. Scoped to Eixy classes only so other motion-intent transforms (fade-in, word-reveal) are not blanket-reset.
+- `components/JournalForm.tsx` — soft character-count warning: when `value.length >= 1800 && !isTooLong`, renders a `text-[color:var(--accent-yellow)]` line below the counter: "Getting close to the limit — you have 2000 characters." Hard-limit warning unchanged. Added `autoComplete="off"`, `autoCorrect="off"`, `spellCheck={false}` to the textarea.
+- `components/Eixy.tsx` — removed two `// eslint-disable-next-line react-hooks/exhaustive-deps` comments. Refactored `clearFadeTimer`, `startFadeTimer`, and `clearWaitingTimer` to `useCallback` with stable deps so they can be safely included in the effects' dependency arrays without causing cascading renders. Removed the now-unnecessary suppressions.
+- `App.tsx` — `getDeviceId()` wrapped in try/catch: `crypto.randomUUID()` failure falls back to `Date.now().toString(36) + Math.random().toString(36).slice(2)`. `localStorage` read for `sift-last-checkin` wrapped in try/catch. `localStorage.setItem("sift-last-checkin", ...)` on successful submit wrapped in try/catch. Removed unused `handleClear()` function; `handleNewCheckIn()` now calls `setText("")` directly.
+
+**Why:** T1 closes zero-coverage gaps on Round 2 / Batch B features so regressions are caught before they ship. T2 fixes accessibility gaps that are independent of visual design. T4 fixes the known edge case where `prefers-reduced-motion` + `prefers-contrast: more` users see a permanent Eixy offset from animation final-state transforms. T5 warns before the hard limit rather than after. T6 prevents browser autocomplete/spellcheck from storing or underlining sensitive reflection text. T7 prevents hard crashes from unavailable browser APIs and uncaught storage errors in private-browsing modes. T8 removes dead code and replaces eslint suppressions with properly stable callback refs.
+
+**Left alone / deliberately not changed:** `lang="en"` was already present in `app/layout.tsx` from a prior session. `aria-hidden="true"` was already present on `PixelSkyline.tsx`'s wrapper div from a prior session. No theme tokens were changed. No CrisisView chrome was changed. No new components were added. The pre-existing `react-hooks/set-state-in-effect` lint errors in `Eixy.tsx` (three effects that intentionally synchronize internal timer state) are not introduced by this session and remain as known pre-existing issues.
+
+**Follow-ups:**
+- T3 (375px mobile Eixy overlap spot-check) is a manual visual verification; not completed in this session because no live viewport screenshot was available. Overlap status remains unconfirmed — the existing `h-16 w-16` mobile sprite size is retained until a real-device or dev-tools visual check is performed.
