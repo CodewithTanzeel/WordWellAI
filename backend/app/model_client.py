@@ -44,7 +44,17 @@ Valid labels (pick the single best fit):
   elevated_stress_signals – clear distress, anxiety, burnout, or persistent low mood
 
 Be conservative: prefer mild_stress_signals or mixed_signals over elevated when uncertain.
-Never output anything other than the JSON object."""
+Never output anything other than the JSON object.
+
+Examples:
+Input: "I feel great today, looking forward to the weekend!"
+Output: {"label": "low_stress_signals", "confidence": 0.95}
+
+Input: "Just really tired and a bit worried about my upcoming test."
+Output: {"label": "mild_stress_signals", "confidence": 0.85}
+
+Input: "I can't take this anymore, everything is falling apart and I can't sleep."
+Output: {"label": "elevated_stress_signals", "confidence": 0.90}"""
 
 
 def _call_hf_space(text: str) -> dict | None:
@@ -70,12 +80,14 @@ def _call_hf_space(text: str) -> dict | None:
         if client is None:
             return None
         
+        formatted_prompt = f"[INST] {_SYSTEM_PROMPT}\n\nUser Entry: {text} [/INST]"
+        
         # Try multiple function names with explicit api_name
         result = None
         for api_name in ("/generate_response", "/generate"):
             try:
                 result = client.predict(
-                    prompt=text,
+                    prompt=formatted_prompt,
                     max_new_tokens=128,
                     temperature=0.1,  # Lower temp for more deterministic classification
                     api_name=api_name,
@@ -87,7 +99,7 @@ def _call_hf_space(text: str) -> dict | None:
         if not result:
             # Fallback: call without explicit api_name
             result = client.predict(
-                prompt=text,
+                prompt=formatted_prompt,
                 max_new_tokens=128,
                 temperature=0.1,
             )
