@@ -65,8 +65,11 @@ export function ResultView({ result }: { result: Result }) {
         <div
           className="flex h-4 flex-1 gap-[2px] border-2 p-[2px]"
           style={{ borderColor: "var(--ink)", borderRadius: 0 }}
-          role="img"
-          aria-label={`confidence ${percent}%`}
+          role="progressbar"
+          aria-valuenow={percent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="confidence"
         >
           {Array.from({ length: segments }).map((_, i) => (
             <span

@@ -85,6 +85,18 @@ body {
   }
 }
 
+@media (prefers-contrast: more) {
+  .animate-eixy-float,
+  .animate-eixy-walk,
+  .animate-eixy-bounce-fast,
+  .animate-eixy-bounce-slow,
+  .animate-eixy-think,
+  .animate-eixy-wait {
+    animation: none !important;
+    transform: translateY(0) rotate(0deg) !important;
+  }
+}
+
 @keyframes fadeInFast {
   from {
     opacity: 0;

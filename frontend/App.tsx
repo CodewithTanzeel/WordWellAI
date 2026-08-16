@@ -31,10 +31,23 @@ type AnalyzeResult = NormalResult | CrisisResult;
 function getDeviceId(): string {
   if (typeof window === "undefined") return "server";
   const key = "sift-device-id";
-  let id = window.localStorage.getItem(key);
+  let id: string | null = null;
+  try {
+    id = window.localStorage.getItem(key);
+  } catch {
+    // private browsing or quota exceeded — fall back to a transient id
+  }
   if (!id) {
-    id = crypto.randomUUID();
-    window.localStorage.setItem(key, id);
+    try {
+      id = crypto.randomUUID();
+    } catch {
+      id = Date.now().toString(36) + Math.random().toString(36).slice(2);
+    }
+    try {
+      window.localStorage.setItem(key, id);
+    } catch {
+      // silent — persistence is optional
+    }
   }
   return id;
 }
@@ -66,13 +79,19 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [showEixy, setShowEixy] = useState(true);
   const [text, setText] = useState("");
+  const [lastCheckIn, setLastCheckIn] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
 
-  const lastCheckIn =
-    typeof window !== "undefined"
-      ? window.localStorage.getItem("sift-last-checkin")
-      : null;
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        setLastCheckIn(window.localStorage.getItem("sift-last-checkin"));
+      } catch {
+        // silent — persistence is optional
+      }
+    }
+  }, []);
 
   useEffect(() => {
     fetchCheckinCount().then(setCount);
@@ -84,15 +103,11 @@ export function App() {
     }
   }, [error]);
 
-  function handleClear() {
-    setText("");
-  }
-
   function handleNewCheckIn() {
     setResult(null);
     setError(null);
     setShowEixy(true);
-    handleClear();
+    setText("");
     requestAnimationFrame(() => {
       textareaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
       textareaRef.current?.focus();
@@ -120,7 +135,11 @@ export function App() {
       } else {
         setResult(data as AnalyzeResult);
         if (typeof window !== "undefined") {
-          window.localStorage.setItem("sift-last-checkin", new Date().toISOString());
+          try {
+            window.localStorage.setItem("sift-last-checkin", new Date().toISOString());
+          } catch {
+            // silent — persistence is optional
+          }
         }
       }
 

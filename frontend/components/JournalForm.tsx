@@ -76,6 +76,9 @@ const JournalForm = forwardRef<HTMLTextAreaElement, Props>(
           disabled={isSubmitting}
           rows={Math.min(8, Math.max(4, Math.ceil(value.length / 80)))}
           placeholder="Write freely — there's no wrong way to say it."
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
           className="w-full resize-none border-2 bg-white p-4 text-base leading-relaxed text-[color:var(--ink)] outline-none transition-colors placeholder:text-[color:var(--muted)] focus-visible:ring-2 focus-visible:ring-[color:var(--accent-pink)] disabled:opacity-60 disabled:cursor-not-allowed"
           style={{
             borderRadius: 0,
@@ -92,6 +95,11 @@ const JournalForm = forwardRef<HTMLTextAreaElement, Props>(
               ? `That's too long by ${value.length - MAX_LENGTH} characters — the limit is 2000.`
               : `${value.length} / ${MAX_LENGTH}`}
           </span>
+          {!isTooLong && value.length >= 1800 && (
+            <span className="text-[color:var(--accent-yellow)]">
+              Getting close to the limit — you have 2000 characters.
+            </span>
+          )}
         </div>
 
         <button

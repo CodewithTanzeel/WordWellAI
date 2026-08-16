@@ -542,3 +542,27 @@ Cross-referencing the full `UX-UI-IMPROVEMENT-PLAN.md` against the log and code,
 **Left alone / deliberately not changed:** `CrisisView` boundary is untouched — Eixy is still fully hidden during crisis results. `prefers-reduced-motion` requires no per-component guards — the existing global `* { animation-duration: 0.001ms !important; }` rule in `globals.css:81-85` already catches both new keyframe animations. Eixy sprite size (`h-16 w-16 sm:h-24 sm:w-24`) is unchanged — Batch B adds poses only, no resize. The existing `eixyFloat`, `eixyWalk`, `eixyBounceFast`, `eixyBounceSlow` keyframes and their utility classes are untouched. Backend `main.py` crisis response shape is unchanged.
 
 **Follow-ups:** None — Batch B complete per plan.
+
+---
+
+## 2026-08-16 — UX Round 3: accessibility hardening, resilience, test coverage, and cleanup (Plan 1786869055752-ux-round3-plan.md)
+
+**Context:** Round 3 of the UX improvement series — small, scoped changes closing accessibility gaps, adding browser-API error resilience, and pinning Round 2 / Batch B behavior with automated tests. No theme changes, no CrisisView chrome changes, no new components.
+
+**Changed:**
+- `tests/JournalForm.test.tsx` — added 4 tests: last-check-in render/omit, auto-grow rows (4/5/8), Ctrl+Enter submit gated by canSubmit, Cmd+Enter submit.
+- `tests/App.test.tsx` — added 1 test: successful submit writes `sift-last-checkin` with an ISO string; "NEW CHECK-IN" preserves the value (not cleared).
+- `tests/Eixy.test.tsx` — new file, 6 tests: null when not visible, pose priority (listening > thinking), waiting state after 20s idle and reset on listening, bubble fade suppressed while listening, aria-label reflects active mode, typing quotes rendered while listening.
+- `components/ResultView.tsx` — confidence bar changed from `role="img" aria-label="confidence N%"` to `role="progressbar" aria-valuenow={percent} aria-valuemin={0} aria-valuemax={100} aria-label="confidence"`.
+- `components/CheckInCount.tsx` — removed `aria-live="polite"`; the count is already visible text, the live region added no value and caused redundant screen-reader announcements on every render.
+- `app/globals.css` — added `@media (prefers-contrast: more)` block resetting transform for all Eixy animation classes (`.animate-eixy-float`, `.animate-eixy-walk`, `.animate-eixy-bounce-fast`, `.animate-eixy-bounce-slow`, `.animate-eixy-think`, `.animate-eixy-wait`) to `translateY(0) rotate(0deg)` with `animation: none`. Scoped to Eixy classes only so other motion-intent transforms (fade-in, word-reveal) are not blanket-reset.
+- `components/JournalForm.tsx` — soft character-count warning: when `value.length >= 1800 && !isTooLong`, renders a `text-[color:var(--accent-yellow)]` line below the counter: "Getting close to the limit — you have 2000 characters." Hard-limit warning unchanged. Added `autoComplete="off"`, `autoCorrect="off"`, `spellCheck={false}` to the textarea.
+- `components/Eixy.tsx` — removed two `// eslint-disable-next-line react-hooks/exhaustive-deps` comments. Refactored `clearFadeTimer`, `startFadeTimer`, and `clearWaitingTimer` to `useCallback` with stable deps so they can be safely included in the effects' dependency arrays without causing cascading renders. Removed the now-unnecessary suppressions.
+- `App.tsx` — `getDeviceId()` wrapped in try/catch: `crypto.randomUUID()` failure falls back to `Date.now().toString(36) + Math.random().toString(36).slice(2)`. `localStorage` read for `sift-last-checkin` wrapped in try/catch. `localStorage.setItem("sift-last-checkin", ...)` on successful submit wrapped in try/catch. Removed unused `handleClear()` function; `handleNewCheckIn()` now calls `setText("")` directly.
+
+**Why:** T1 closes zero-coverage gaps on Round 2 / Batch B features so regressions are caught before they ship. T2 fixes accessibility gaps that are independent of visual design. T4 fixes the known edge case where `prefers-reduced-motion` + `prefers-contrast: more` users see a permanent Eixy offset from animation final-state transforms. T5 warns before the hard limit rather than after. T6 prevents browser autocomplete/spellcheck from storing or underlining sensitive reflection text. T7 prevents hard crashes from unavailable browser APIs and uncaught storage errors in private-browsing modes. T8 removes dead code and replaces eslint suppressions with properly stable callback refs.
+
+**Left alone / deliberately not changed:** `lang="en"` was already present in `app/layout.tsx` from a prior session. `aria-hidden="true"` was already present on `PixelSkyline.tsx`'s wrapper div from a prior session. No theme tokens were changed. No CrisisView chrome was changed. No new components were added. The pre-existing `react-hooks/set-state-in-effect` lint errors in `Eixy.tsx` (three effects that intentionally synchronize internal timer state) are not introduced by this session and remain as known pre-existing issues.
+
+**Follow-ups:**
+- T3 (375px mobile Eixy overlap spot-check) is a manual visual verification; not completed in this session because no live viewport screenshot was available. Overlap status remains unconfirmed — the existing `h-16 w-16` mobile sprite size is retained until a real-device or dev-tools visual check is performed.

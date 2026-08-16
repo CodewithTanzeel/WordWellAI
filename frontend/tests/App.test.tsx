@@ -80,4 +80,37 @@ describe("App integration", () => {
 
     expect(await screen.findByText(/3/)).toBeInTheDocument();
   });
+
+  it("writes sift-last-checkin on successful submit and preserves it on NEW CHECK-IN", async () => {
+    const user = userEvent.setup();
+    const setItem = vi.fn();
+    const originalSetItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = setItem;
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        status: "ok",
+        label: "calm",
+        confidence: 0.5,
+        disclaimer: "This is not a diagnosis.",
+        crisis: false,
+      }),
+    }) as unknown as typeof fetch;
+
+    render(<App />);
+    await user.type(screen.getByRole("textbox"), "a normal entry");
+    await user.click(screen.getByRole("button"));
+
+    expect(setItem).toHaveBeenCalledWith("sift-last-checkin", expect.any(String));
+    const lastValue = setItem.mock.calls.find(([k]) => k === "sift-last-checkin")?.[1];
+    expect(lastValue).toBeTruthy();
+    expect(() => new Date(lastValue as string).toISOString()).not.toThrow();
+
+    await user.click(screen.getByRole("button", { name: /new check-in/i }));
+    const preserved = setItem.mock.calls.filter(([k]) => k === "sift-last-checkin");
+    expect(preserved.length).toBeGreaterThanOrEqual(1);
+
+    Storage.prototype.setItem = originalSetItem;
+  });
 });

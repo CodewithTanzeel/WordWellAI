@@ -6,7 +6,7 @@ import { JournalForm } from "../components/JournalForm";
 
 function Wrapper(props: { onSubmit: (text: string) => void }) {
   const [value, setValue] = useState("");
-    return (
+  return (
     <JournalForm
       value={value}
       onChange={setValue}
@@ -56,5 +56,47 @@ describe("JournalForm", () => {
     render(<JournalForm value="" onChange={vi.fn()} onSubmit={vi.fn()} isSubmitting />);
     expect(screen.getByRole("button")).toBeDisabled();
     expect(screen.getByText(/analyzing|loading|thinking/i)).toBeInTheDocument();
+  });
+
+  it("renders last check-in when provided and omits it when absent", () => {
+    const { rerender } = render(<JournalForm value="" onChange={vi.fn()} onSubmit={vi.fn()} lastCheckIn={new Date(Date.now() - 1000).toISOString()} />);
+    expect(screen.getByText(/last check-in/i)).toBeInTheDocument();
+    expect(screen.getByText(/just now/i)).toBeInTheDocument();
+
+    rerender(<JournalForm value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
+    expect(screen.queryByText(/last check-in/i)).not.toBeInTheDocument();
+  });
+
+  it("auto-grows textarea rows based on content length", () => {
+    const { rerender } = render(<JournalForm value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
+    expect(screen.getByRole("textbox")).toHaveAttribute("rows", "4");
+
+    rerender(<JournalForm value={"a".repeat(400)} onChange={vi.fn()} onSubmit={vi.fn()} />);
+    expect(screen.getByRole("textbox")).toHaveAttribute("rows", "5");
+
+    rerender(<JournalForm value={"a".repeat(640)} onChange={vi.fn()} onSubmit={vi.fn()} />);
+    expect(screen.getByRole("textbox")).toHaveAttribute("rows", "8");
+  });
+
+  it("submits via Ctrl+Enter when canSubmit is true and does not fire when empty", async () => {
+    const handleSubmit = vi.fn();
+    render(<Wrapper onSubmit={handleSubmit} />);
+    const textarea = screen.getByRole("textbox");
+
+    await fireEvent.keyDown(textarea, { key: "Enter", ctrlKey: true });
+    expect(handleSubmit).not.toHaveBeenCalled();
+
+    await userEvent.type(textarea, "some text");
+    await fireEvent.keyDown(textarea, { key: "Enter", ctrlKey: true });
+    expect(handleSubmit).toHaveBeenCalledWith("some text");
+  });
+
+  it("submits via Cmd+Enter when canSubmit is true", async () => {
+    const handleSubmit = vi.fn();
+    render(<Wrapper onSubmit={handleSubmit} />);
+    const textarea = screen.getByRole("textbox");
+    await userEvent.type(textarea, "some text");
+    await fireEvent.keyDown(textarea, { key: "Enter", metaKey: true });
+    expect(handleSubmit).toHaveBeenCalledWith("some text");
   });
 });

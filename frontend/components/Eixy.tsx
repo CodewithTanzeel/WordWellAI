@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { EixySprite } from "./EixySprite";
 
 export type EixyState = "intro" | "positive" | "elevated";
@@ -47,26 +47,26 @@ export function Eixy({ state, isVisible, isListening = false, isThinking = false
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const waitingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function clearFadeTimer() {
+  const clearFadeTimer = useCallback(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-  }
+  }, []);
 
-  function startFadeTimer() {
+  const startFadeTimer = useCallback(() => {
     clearFadeTimer();
     if (!pausedRef.current) {
       timerRef.current = setTimeout(() => setBubbleVisible(false), FADE_MS);
     }
-  }
+  }, [clearFadeTimer]);
 
-  function clearWaitingTimer() {
+  const clearWaitingTimer = useCallback(() => {
     if (waitingTimerRef.current) {
       clearTimeout(waitingTimerRef.current);
       waitingTimerRef.current = null;
     }
-  }
+  }, []);
 
   useEffect(() => {
     setBubbleVisible(true);
@@ -76,8 +76,7 @@ export function Eixy({ state, isVisible, isListening = false, isThinking = false
       startFadeTimer();
     }
     return clearFadeTimer;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, isListening, isThinking]);
+  }, [state, isListening, isThinking, clearFadeTimer, startFadeTimer]);
 
   useEffect(() => {
     if (!isListening || TYPING_QUOTES.length === 0) return;
@@ -103,8 +102,7 @@ export function Eixy({ state, isVisible, isListening = false, isThinking = false
       setIsWaiting(true);
     }, WAITING_TIMEOUT_MS);
     return clearWaitingTimer;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state, isListening, isThinking, isVisible]);
+  }, [state, isListening, isThinking, isVisible, clearWaitingTimer]);
 
   function handlePause() {
     pausedRef.current = true;
