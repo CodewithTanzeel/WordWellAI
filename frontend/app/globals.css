@@ -206,6 +206,41 @@ body {
   animation: eixyBounceSlow 1.2s ease-in-out;
 }
 
+@keyframes eixyThink {
+  0%, 100% {
+    transform: rotate(0deg) translateX(0);
+  }
+  25% {
+    transform: rotate(-3deg) translateX(-4px);
+  }
+  75% {
+    transform: rotate(3deg) translateX(4px);
+  }
+}
+
+@keyframes eixyWait {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  30% {
+    transform: translateY(-3px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(-2deg);
+  }
+  70% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+.animate-eixy-think {
+  animation: eixyThink 2.2s ease-in-out infinite;
+}
+
+.animate-eixy-wait {
+  animation: eixyWait 4s ease-in-out infinite;
+}
+
 @keyframes spinPulse {
   0%, 100% {
     opacity: 1;

@@ -211,6 +211,7 @@ export function App() {
         state={result && !result.crisis ? getEixyState(result) ?? "positive" : "intro"}
         isVisible={showEixy && !(result && result.crisis)}
         isListening={!result && text.trim().length > 0}
+        isThinking={isSubmitting}
       />
     </div>
   );

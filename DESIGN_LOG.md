@@ -509,3 +509,20 @@ Cross-referencing the full `UX-UI-IMPROVEMENT-PLAN.md` against the log and code,
 **Left alone / deliberately not changed:** Rotation logic, timing (6s), fade-timer fix, and scoping (typing-state only) from the previous entry all unchanged — copy-only update.
 
 **Follow-ups:** None.
+
+---
+
+## 2026-08-16 — Batch B: Eixy thinking and waiting poses (Plan §Batch B)
+
+**Context:** Second implementation batch from `1786866535417-batched-attention-retention-plan.md` — two new animation states for Eixy so the character doesn't feel frozen during model calls or long idle periods.
+
+**Changed:**
+- `app/globals.css` — added `@keyframes eixyThink` (2.2s ease-in-out infinite: gentle ±3° rotation with ±4px horizontal sway, distinct from the existing float/walk/bounce set) and `@keyframes eixyWait` (4s ease-in-out infinite: slow vertical drift ±3px with a −2° head-tilt at 50%). Added `.animate-eixy-think` and `.animate-eixy-wait` utility classes. No token changes.
+- `components/Eixy.tsx` — added `isThinking?: boolean` prop. Pose priority chain is now: `isListening` → walk, `isThinking` → think, `isWaiting` → wait, result-state (intro/positive/elevated) → float/fast-bounce/slow-bounce. Added a 20s `useEffect` timer: when `isVisible` is true and neither `isListening` nor `isThinking` is active, a timeout fires after 20s setting `isWaiting = true`; any change to `state`, `isListening`, `isThinking`, or `isVisible` cancels the pending timeout and resets `isWaiting` to false. Bubble text for waiting state is `"Take your time."`. Word-by-word intro reveal is suppressed while waiting (`showWordReveal` requires `!isWaiting`). `aria-label` on the outer container reflects the active mode. `forwardRef` is not used on Eixy — no ref contract to maintain.
+- `App.tsx` — passes `isThinking={isSubmitting}` to `<Eixy>`. `isListening` continues to take priority because `isListening` is checked first in Eixy's pose ternary; when the user is typing (isListening=true) during a submit window, Eixy walks regardless of isThinking.
+
+**Why:** The model-call window (typically 1–5s, occasionally longer) previously left Eixy in whatever static pose she was in — either idle float or the last reaction bounce — which reads as frozen. The think pose gives a distinct "working on it" signal. Long idle periods (20s+) previously had no change at all; the wait pose signals continued presence without demanding attention, reducing the sense that the app has stalled.
+
+**Left alone / deliberately not changed:** `CrisisView` boundary is untouched — Eixy is still fully hidden during crisis results. `prefers-reduced-motion` requires no per-component guards — the existing global `* { animation-duration: 0.001ms !important; }` rule in `globals.css:81-85` already catches both new keyframe animations. Eixy sprite size (`h-16 w-16 sm:h-24 sm:w-24`) is unchanged — Batch B adds poses only, no resize. The existing `eixyFloat`, `eixyWalk`, `eixyBounceFast`, `eixyBounceSlow` keyframes and their utility classes are untouched. Backend `main.py` crisis response shape is unchanged.
+
+**Follow-ups:** None — Batch B complete per plan.
